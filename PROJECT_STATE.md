@@ -1,179 +1,111 @@
-# HW4 Project State
+# HW4 project state
+
+Last reconciled: 2026-07-25
 
 ## Objective
 
-Complete HW4 collaboratively as a learning exercise.
+Complete HW4 collaboratively as a learning exercise. The student's reasoning
+must lead each answer; Codex challenges, hints, formalizes, implements only
+approved designs, and writes approved Hebrew answers.
 
-Codex must not independently solve new questions for the student. Each answer
-and algorithm must originate from the student's reasoning and be developed
-through questions, progressively stronger hints, correction, and explicit
-approval.
+## Governing files
 
-## Sources of truth
+- `HOMEWORK_STYLE_GUIDE.md`: authoritative constant collaboration, writing,
+  Word, RTL, and verification rules.
+- `style/homework_style_contract.json`: machine-checkable Word/OOXML values.
+- `AGENTS.md`: mandatory entry point for future sessions.
+- `HW4.pdf`: authoritative assignment wording.
+- `q3_set_networks.py`: current approved Question 3(a) implementation.
 
-- `HW4.pdf`: authoritative assignment wording and requirements.
-- `HW4-Solution.docx`: authoritative written-solution checkpoint.
-- `q3_set_networks.py`: authoritative runnable implementation checkpoint for
-  the approved Question 3 components.
-- `requirements.txt`: reproducible Python dependency manifest.
-- Course lecture notes and tutorials available through the course-materials
-  shortcut: foundation for expected knowledge and solution methods.
-- Previous homework documents: formatting and stylistic reference.
+Do not duplicate stable style rules here. Do not use or modify
+LocationPipeline.
 
-Do not use or modify LocationPipeline.
+## Accepted visual baseline
 
-## Communication and writing
+- File: `old/HW4-Solution.pre-q3a-20260724-230819.docx`
+- SHA-256:
+  `6197D53B5522953BDFEF486372541E9AB082FBF259471BED34AE11891EEE4AE2`
+- Accepted scope: Question 1 through Question 2(e), including the corrected
+  Q2(c) visual and the approved Q2(e) conclusion: the linear layer has eight
+  free parameters; if "layer" means an affine layer, the invariant bias adds
+  one, for nine parameters in total.
 
-- Discuss reasoning in English.
-- Write final submitted answers in polished Hebrew.
-- Present each assignment question verbatim in its original English.
-- Include the original English question wording in the final document.
-- Use the existing Hebrew RTL formatting and style.
-- Match the concise, professional explanatory style established in HW1-HW3:
-  short logical paragraphs, one claim per paragraph, brief inline course
-  references, only essential displayed equations, and a direct conclusion.
-- Write complete, rigorous, well-presented final answers without redundant
-  restatement.
-- Do not add a figure, sketch, diagram, or other visual to a written answer
-  unless the user explicitly requests it. An assignment prompt mentioning a
-  possible sketch is not, by itself, authorization to add one.
-- The formal answer need not preserve the student's original wording.
+This is the last accepted style authority. It must remain unchanged.
 
-## Mandatory Word formatting implementation
+## Current working checkpoint
 
-- Every Hebrew prose paragraph must use Word-native RTL paragraph direction
-  and visual right alignment explicitly. In this document, Word automation
-  reports `ReadingOrder = 0` and logical-start `Alignment = 0` for a visually
-  right-aligned RTL paragraph; forcing `Alignment = 2` moves RTL headings to
-  the visual left. Therefore verify the Word values after reopening, preserve
-  the native `w:rtl` heading formatting used by the approved Q1/Q2 headings,
-  and confirm the physical right edge in a rendered full-page view.
-- Do not infer RTL from Hebrew characters, run direction, inherited defaults,
-  or visual inspection of a cropped text selection.
-- Hebrew prose must inherit the document's established DejaVu Sans 12 pt
-  formatting. Do not introduce a direct Times New Roman font override.
-- Displayed mathematics must be a real Word equation in its own centered LTR
-  paragraph (`ReadingOrder = 1`), never ordinary text inside a Hebrew
-  paragraph.
-- Use Word's semantic heading styles throughout: each question title is
-  `Heading 1`, each named or lettered subsection within a question is
-  `Heading 2`, and any genuinely nested subsection introduced later should
-  continue the hierarchy with `Heading 3`.
-- Match the actual HW1 heading definitions rather than Word's generic
-  defaults: `Heading 1` is regular-weight 16 pt with 12 pt before and 0 pt
-  after; `Heading 2` is regular-weight 13 pt with 2 pt before and 0 pt after.
-  Both use the HW1 accent color and the document's DejaVu Sans typography.
-- Every heading paragraph must remain explicitly RTL/right in Word. In this
-  document, preserve the verified native setting (`ReadingOrder = 0`,
-  logical-start `Alignment = 0`) together with the Hebrew `w:rtl` runs and
-  inline Word equations; never clear or rebuild their run formatting merely
-  to apply a heading style.
-- Before delivering a DOCX edit, compare the affected page against an approved
-  neighboring page in a full Word-window view, then reopen the saved file and
-  audit the paragraph properties above.
+- File: `HW4-Solution.docx`
+- SHA-256:
+  `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`
+- Git checkpoint: `5e52ec5` on `main`
+- Publication status: pushed, but explicitly rejected as a DOCX-format
+  checkpoint.
 
-## Required learning workflow
+Question 3(a)'s reasoning, formal Hebrew content, approved design, code, and
+tests remain valid. Its document structure and visual formatting are not
+approved. The current file is therefore a repair source, not a style
+authority and not a finished submission checkpoint.
 
-For each theoretical subpart:
+## Gate record
 
-1. Present the original question verbatim.
-2. Give brief general context and point to relevant course material.
-3. Ask the student for their reasoning.
-4. Challenge mistakes, omissions, and unjustified steps.
-5. Give progressively stronger hints rather than immediately revealing the
-   solution.
-6. Continue until the reasoning is completely correct.
-7. Draft a full formal Hebrew answer.
-8. Verify its correctness with the student.
-9. Wait for the student's explicit `approved`.
-10. Only then update and save `HW4-Solution.docx`.
+| Part | Reasoning | Formal text | Code/tests | DOCX insertion | Mechanical audit | User visual approval | Publication |
+|---|---|---|---|---|---|---|---|
+| Q1 | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
+| Q2(a) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
+| Q2(b) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
+| Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
+| Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
+| Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
+| Q3(a) | approved | approved | passed | present, but rejected formatting | fails prompt/forbidden-style gates | rejected | pushed only as rejected checkpoint |
+| Q3(b-e) | not started | not started | not started | not started | not started | not started | not started |
+| Q4 | not started | not started | not started | not started | not started | not started | not started |
 
-Never write a new subpart into the document before explicit approval.
+Semantic approval never implies DOCX-format approval.
 
-## Course-material references
+## Q3(a) approved technical checkpoint
 
-Build from the lectures and tutorials instead of unnecessarily rederiving
-course results.
+- Canonize rows lexicographically, flatten the canonical matrix, and apply a
+  two-layer MLP with one ReLU.
+- Implementation: `q3_set_networks.py`.
+- Approved experiment values: seed 2319, `n=20`, `d=3`, `p=4`, hidden width
+  32, `atol=1e-5`, `rtol=0`.
+- Recorded results: required invariance test passes with maximum absolute
+  error 0; partial-tie/duplicate-row test, 125 additional permutation checks,
+  gradient check, and CUDA smoke test also passed.
 
-When an answer uses a result or solved example shown in class, include a brief
-inline reference in the Hebrew solution. Identify the lecture or tutorial and,
-when reasonably available, the relevant page, slide, theorem, or exercise.
-Keep references accurate but unobtrusive.
+These technical results may be reused when repairing the document; they do not
+need to be re-derived unless the design changes.
 
-## Programming workflow
+## Identified Q3(a) format failure
 
-For every Q3 and Q4 programming subpart:
+The Q3 prompt was retyped into eleven paragraphs using a newly invented
+`Original Question` style (Aptos 9 pt, gray). HW1-HW3 and accepted HW4 Q1-Q2
+instead place a centered, readable source excerpt immediately after the
+Question Heading 1. This structural mismatch is the primary rejected-format
+defect. Any additional RTL, font, heading, spacing, TOC, or pagination defects
+must be resolved under the full guide and verified in Word.
 
-1. Present the question verbatim.
-2. Ask the student to propose the algorithm, architecture, or pseudocode.
-3. Challenge conceptual mistakes using progressively stronger hints.
-4. Agree on a correct design.
-5. Wait for explicit approval before implementing it.
-6. Translate the approved design into clean, runnable PyTorch code.
-7. Run approved tests and experiments autonomously.
-8. Report all results.
+## Infrastructure
 
-If testing exposes a conceptual error, return to the student with hints before
-changing the approved design.
-
-Codex may autonomously fix purely mechanical problems such as syntax errors,
-paths, serialization, or formatting, but must explain what changed.
-
-## Approved work
-
-- [x] Q1: discussed, understood, formally written, and approved.
-- [x] Q2(a): discussed, understood, formally written, and approved.
-- [x] Q2(b): discussed, understood, formally written, and approved.
-- [x] Q2(c) written explanation: discussed, understood, formally written, and
-      approved.
-- [x] Q2(c) visual correction: the four unnecessary small matrices were
-      removed and only the required block-type parameter-sharing visual was
-      retained.
-- [x] Q2(d): discussed, understood, formally written, and approved.
-- [x] Q2(e): discussed, corrected, formally written, and approved. The written
-      answer gives 8 parameters for the linear map and separately explains
-      that an affine extension has 9 parameters in total. It is written
-      concisely in the HW1-HW3 style and contains no redundant figure.
-- [x] Q3(a) design: discussed and explicitly approved. The network
-      lexicographically canonizes the rows, flattens the canonical matrix, and
-      applies a two-layer MLP with one ReLU.
-- [x] Q3(a) implementation and tests: implemented in `q3_set_networks.py`.
-      With seed 2319, n=20, d=3, p=4, hidden width 32, and
-      `atol=1e-5, rtol=0`, the required invariance test passes with maximum
-      absolute error 0. A partial-tie/duplicate-row test, 125 additional
-      permutation checks, a gradient check, and a CUDA smoke test also pass.
-- [x] Q3(a) Hebrew report text and insertion into `HW4-Solution.docx`:
-      explicitly approved and written. The original English prompt is included
-      in the established `Original Question` style; the Hebrew answer uses
-      `Heading 1`/`Heading 2`, native RTL formatting, and centered Word
-      equations. The Word-rendered ten-page document passed full visual QA.
-- [ ] Q3(b-e).
-- [ ] Q4.
-- [ ] Final report verification and export.
-- [ ] Runnable-code ZIP.
-
-## Project infrastructure
-
-- Local Git repository initialized on branch `main`.
-- Remote `origin` is
-  `https://github.com/uriyaca23/DeepLearningGroups.git`.
-- The approved project checkpoint is published directly to the public
-  repository's `main` branch.
+- Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
+- Branch: `main`
 - Project virtual environment: `.venv`, Python 3.12.13.
-- Installed project dependencies: PyTorch 2.13.0 CPU and NumPy 2.5.1.
-- A separate installed Python 3.8 runtime has PyTorch 2.4.1 with CUDA 12.4
-  and an NVIDIA GeForce RTX 3080; Q3(a) also passed on that GPU.
+- Project dependencies recorded in `requirements.txt`.
+- Superseded DOCX checkpoints belong only under `old/`.
+- Candidates, renders, and generated reports belong under ignored `_qa/`.
 
-## Current document checkpoint
+## Precise next action
 
-- `HW4-Solution.docx` is the authoritative current solution.
-- It contains completed work through Q3(a).
-- Q2(e), including its affine clarification, is on page 9.
-- Q3(a), including the original English prompt, proof, architecture, and test
-  report, begins on page 9 and continues on page 10.
-- Superseded DOCX checkpoints are stored under `old/`, not in the main folder.
+Do not proceed to Q3(b) yet.
 
-## Next learning step
+First, create a Q3(a) repair candidate from the accepted pre-Q3(a) baseline,
+reuse the already approved Hebrew content and code results, insert the complete
+Q3 prompt as a high-resolution excerpt from `HW4.pdf`, and reproduce the
+accepted Heading 1, Heading 2, body, equation, header, TOC, font, and RTL
+patterns. Then:
 
-Continue interactively to Q3(b), beginning with the original English wording,
-brief course context, and the student's proposed design.
+1. run `scripts/audit_homework_docx.py`;
+2. save, close, reopen, and export the exact candidate with Microsoft Word;
+3. inspect all changed/reflowed full pages and their neighbors;
+4. show those full-page renders to the user;
+5. wait for explicit visual approval before promotion, commit, or push.

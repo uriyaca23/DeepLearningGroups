@@ -1,0 +1,267 @@
+{
+  "contract_version": "1.0",
+  "guide_version": "1.0",
+  "description": "Mechanical Word/OOXML contract for the DeepLearningGroups Hebrew homework document. HOMEWORK_STYLE_GUIDE.md remains the human-readable authority.",
+  "accepted_baseline": {
+    "path": "old/HW4-Solution.pre-q3a-20260724-230819.docx",
+    "sha256": "6197D53B5522953BDFEF486372541E9AB082FBF259471BED34AE11891EEE4AE2",
+    "scope": "Accepted visual and structural baseline through Question 2(e)"
+  },
+  "known_rejected_checkpoint": {
+    "path": "HW4-Solution.docx",
+    "sha256": "5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C",
+    "reason": "Question 3 prompt was retyped in an invented Aptos 9 pt gray style instead of using the established source-excerpt structure."
+  },
+  "reference_documents": [
+    {
+      "label": "HW1 solution",
+      "google_drive_file_id": "1S0Xhfjlxo43XhIL8zrVH1O0Oe_JNub_V",
+      "sha256": "79BD42F277093CE6D8407AB43A275EFF8D1A558AF4FC681591DB1E1E3730AE79"
+    },
+    {
+      "label": "HW2 solution",
+      "google_drive_file_id": "1UaXcGNvNPbwL7vCj66zNTbZjx-fDAGhi",
+      "sha256": "5417789D40383DA3D984114250B49351B9118A7B3E4B9F1CB44CF0A6902DA45E"
+    },
+    {
+      "label": "HW3 solution",
+      "google_drive_file_id": "1W6HVI3E8rmXpbTIggysv2CH1xLdGFPHc",
+      "sha256": "0FEA138B3C0061B89A207DC5B1126F8D7F7D32E700112320F23B12380AAB3636"
+    }
+  ],
+  "page_geometry": {
+    "width_twips": 11906,
+    "height_twips": 16838,
+    "top_margin_twips": 1134,
+    "bottom_margin_twips": 1134,
+    "left_margin_twips": 1247,
+    "right_margin_twips": 1247,
+    "header_distance_twips": 652,
+    "footer_distance_twips": 652
+  },
+  "styles": {
+    "Title": {
+      "style_id": "Title",
+      "based_on": "Normal",
+      "paragraph": {
+        "bidi": true,
+        "keep_next": true,
+        "keep_lines": true,
+        "spacing_before_twips": 480,
+        "spacing_after_twips": 240,
+        "alignment": "center"
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 40,
+        "complex_script_size_half_points": 36,
+        "color": "345A8A",
+        "bold": true
+      }
+    },
+    "Normal": {
+      "style_id": "Normal",
+      "based_on": null,
+      "paragraph": {
+        "bidi": true,
+        "spacing_after_twips": 200
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 24,
+        "complex_script_size_half_points": 24,
+        "bidi_language": "he-IL",
+        "bold": false
+      }
+    },
+    "Heading 1": {
+      "style_id": "Heading1",
+      "based_on": "Normal",
+      "paragraph": {
+        "bidi": true,
+        "keep_next": true,
+        "keep_lines": true,
+        "spacing_before_twips": 240,
+        "spacing_after_twips": 0,
+        "outline_level": 0
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 32,
+        "complex_script_size_half_points": 32,
+        "color": "365F91",
+        "bold": false
+      }
+    },
+    "Heading 2": {
+      "style_id": "Heading2",
+      "based_on": "Normal",
+      "paragraph": {
+        "bidi": true,
+        "keep_next": true,
+        "keep_lines": true,
+        "spacing_before_twips": 40,
+        "spacing_after_twips": 0,
+        "outline_level": 1
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 26,
+        "complex_script_size_half_points": 26,
+        "color": "365F91",
+        "bold": false
+      }
+    },
+    "Heading 3": {
+      "style_id": "Heading3",
+      "based_on": "Normal",
+      "paragraph": {
+        "bidi": true,
+        "keep_next": true,
+        "keep_lines": true,
+        "spacing_before_twips": 40,
+        "spacing_after_twips": 0,
+        "outline_level": 2
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 24,
+        "complex_script_size_half_points": 24,
+        "color": "365F91",
+        "bold": false
+      }
+    },
+    "TOC Heading": {
+      "style_id": "TOCHeading",
+      "based_on": "Heading1",
+      "paragraph": {
+        "bidi": true,
+        "keep_next": true,
+        "keep_lines": true,
+        "spacing_before_twips": 240,
+        "spacing_after_twips": 0,
+        "outline_level": 9
+      },
+      "run": {
+        "fonts": {
+          "ascii": "DejaVu Sans",
+          "eastAsia": "DejaVu Sans",
+          "hAnsi": "DejaVu Sans",
+          "cs": "DejaVu Sans"
+        },
+        "size_half_points": 32,
+        "complex_script_size_half_points": 32,
+        "color": "365F91",
+        "bold": false
+      }
+    }
+  },
+  "semantic_structure": {
+    "required_title_text": "למידה עמוקה וחבורות — תרגיל בית 4",
+    "title_style_id": "Title",
+    "question_heading_regex": "^שאלה\\s+[1-4]\\s*$",
+    "question_style_id": "Heading1",
+    "subsection_heading_regex": "^סעיף\\b",
+    "subsection_style_id": "Heading2",
+    "forbidden_used_style_names": [
+      "Original Question"
+    ]
+  },
+  "prompt_excerpts": {
+    "required_immediately_after_each_question": true,
+    "paragraph_style_id": "BodyText",
+    "paragraph_alignment": "center",
+    "keep_lines": true,
+    "spacing_before_twips": 0,
+    "spacing_after_twips": 160,
+    "minimum_width_inches": 6.0,
+    "maximum_width_inches": 6.4,
+    "minimum_drawings": 1,
+    "source": "HW4.pdf"
+  },
+  "hebrew_content": {
+    "checked_style_ids": [
+      "Normal",
+      "Heading1",
+      "Heading2"
+    ],
+    "required_font": "DejaVu Sans",
+    "required_bidi": true,
+    "forbidden_fonts": [
+      "Aptos",
+      "Calibri",
+      "Times New Roman"
+    ],
+    "accepted_legacy_paragraph_deviations": {
+      "font_text_sha256": [
+        "A503EA3F4C72EB361B34FFD6D8BE332D84E21A1E0D472160A78D91FEF84764EE",
+        "9E0B34ACD19DDAFAD8388EAF3631DDAEF6AB93F2E71A7B49EB9623FDCDF3E9F7"
+      ],
+      "paragraph_direction_text_sha256": [
+        "88DF8E731DD0DA3E8F5B29A3B2E3BAE942539908CAE76362E4978FC8F8E274F0",
+        "D892D4D9622F598339558FF8BC972CAF8758AEF69C5EFEEB4C003B8CC32C0451",
+        "F0485358E9B5FCE570119BFBE52241C9721C3284DDBC1C8FF7A26D35907F166B",
+        "BB560B0CA58B21AF1296CBF383CF8B32F3FA662E5CDEFDC7EB5B1EFF28E206D0"
+      ],
+      "instruction": "These hashes grandfather unchanged, visually accepted Q2(d) paragraphs only. Never copy their direct formatting into new text and never add a new exception without explicit user approval."
+    }
+  },
+  "display_equations": {
+    "require_omml": true,
+    "require_centered": true
+  },
+  "table_of_contents": {
+    "required": true
+  },
+  "header": {
+    "required_text_fragments": [
+      "אוריה כהן-אליה",
+      "209517846",
+      "23/07/2026"
+    ],
+    "required_tab_stops": [
+      {
+        "value": "center",
+        "position_twips": 4706
+      },
+      {
+        "value": "right",
+        "position_twips": 9412
+      }
+    ],
+    "font": "Calibri",
+    "size_half_points": 24,
+    "instruction": "Preserve the accepted header package part exactly; do not recreate or restyle it while adding answers."
+  },
+  "allowed_non_prompt_media_sha256": [
+    {
+      "sha256": "E0E9920F127B039828227E918CBC5712CB87B310D68290AB25422201C90595A0",
+      "label": "Approved Q2(c) block-type parameter-sharing diagram"
+    }
+  ]
+}
