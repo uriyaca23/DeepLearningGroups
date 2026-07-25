@@ -23,8 +23,8 @@ Non-negotiable:
   of the formal answer.
 - Treat `old/HW4-Solution.pre-q3a-20260724-230819.docx` as the last accepted
   visual baseline through Question 2(e). `HW4-Solution.docx` is the current
-  accepted and visually approved checkpoint through Question 3(a); new work
-  begins with Question 3(b).
+  accepted and visually approved checkpoint through Question 3(b); new work
+  begins with Question 3(c).
 - Build DOCX edits on a candidate copy by cloning accepted document elements;
   never start from a blank document or apply generic Word formatting.
 - Run the structural audit and Word render gates specified in

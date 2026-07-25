@@ -37,13 +37,16 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`
-- Accepted scope: Question 1 through Question 3(a).
-- User visual approval: granted on 2026-07-25 after the corrected full-page
-  Microsoft Word render was shown.
-- Git checkpoint: `bfa6a0d` on `main`.
-- Publication status: published to `origin/main`.
-- Rejected predecessor archived as
+  `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`
+- Accepted scope: Question 1 through Question 3(b).
+- User visual approval: granted on 2026-07-25 after the full-page Microsoft
+  Word renders of pages 11 and 12 were shown.
+- Git checkpoint: pending the approved-checkpoint commit.
+- Publication status: pending push to `origin/main`.
+- Accepted Q3(a) predecessor archived as
+  `old/HW4-Solution.pre-q3b-20260725-150335.docx`, SHA-256
+  `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`.
+- The earlier rejected Q3(a) checkpoint remains archived as
   `old/HW4-Solution.rejected-q3a-20260725-125359.docx`, SHA-256
   `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`.
 
@@ -57,25 +60,31 @@ remain unchanged.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q3(b-e) | not started | not started | not started | not started | not started | not started | not started |
+| Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | pending |
+| Q3(b) | approved | approved | passed | approved and promoted | passes | approved | pending |
+| Q3(c-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
 Semantic approval never implies DOCX-format approval.
 
-## Q3(a) approved technical checkpoint
+## Q3(a-b) approved technical checkpoint
 
-- Canonize rows lexicographically, flatten the canonical matrix, and apply a
-  two-layer MLP with one ReLU.
+- Shared experimental configuration: seed 2319, `n=5`, `d=3`, `p=4`, hidden
+  width 32, `atol=1e-5`, and `rtol=0`.
+- Q3(a): canonize rows lexicographically, flatten the canonical matrix, and
+  apply a two-layer MLP with one ReLU.
+- Q3(b): apply the same ordinary order-sensitive two-layer MLP to every one of
+  the `5! = 120` row permutations and average the resulting output vectors.
 - Implementation: `q3_set_networks.py`.
-- Approved experiment values: seed 2319, `n=20`, `d=3`, `p=4`, hidden width
-  32, `atol=1e-5`, `rtol=0`.
-- Recorded results: required invariance test passes with maximum absolute
-  error 0; partial-tie/duplicate-row test, 125 additional permutation checks,
-  gradient check, and CUDA smoke test also passed.
+- Recorded Q3(a) results: required invariance test passes; the
+  partial-tie/duplicate-row test also passes.
+- Recorded Q3(b) results: required invariance test passes; the ordinary base
+  MLP is non-invariant on the test input, while the averaged model has maximum
+  absolute permutation error `2.980232239e-08`. An exhaustive check of all 120
+  input permutations and a finite-gradient check also pass.
 
-These technical results may be reused when repairing the document; they do not
-need to be re-derived unless the design changes.
+These technical results may be reused in later comparisons; they do not need
+to be re-derived unless the design changes.
 
 ## Resolved Q3(a) format repair
 
@@ -93,6 +102,25 @@ need to be re-derived unless the design changes.
 - The promoted main file was rendered again after promotion and matched the
   visually approved candidate on all eleven pages.
 
+## Approved Q3(b) document addition
+
+- Q3(a)'s experiment was revised from `n=20` to the user-approved `n=5` so
+  parts (a) and (b) use the same setting. Its displayed MLP architecture now
+  records the explicitly approved hidden width 32.
+- Q3(b) uses an accepted Heading 2 clone, concise Hebrew prose in the
+  HW1-HW3 style, and three centered Word-native equations. No answer figure
+  was added.
+- All new Hebrew paragraphs inherit the accepted native RTL behavior and
+  DejaVu Sans body style; no direct `right` alignment override was introduced.
+- The mechanical contract passes. Microsoft Word updated the TOC, saved,
+  closed, and reopened the candidate successfully.
+- Live Word inspection confirmed the accepted RTL reading order and alignment.
+  Two independent Word exports were pixel-identical on all twelve pages.
+- Pages 1-10 remained pixel-identical to the prior accepted checkpoint. The
+  user visually approved the changed full-page renders of pages 11 and 12.
+- After promotion, a fresh read-only Word export of `HW4-Solution.docx`
+  matched the approved candidate pixel-for-pixel on all twelve pages.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -104,8 +132,9 @@ need to be re-derived unless the design changes.
 
 ## Precise next action
 
-Continue collaboratively with Question 3(b): present its original English
+Continue collaboratively with Question 3(c): present its original English
 wording from the approved prompt image, give only brief course-oriented
-context, and ask one focused question about the student's reasoning. Do not
-write a Q3(b) answer into the DOCX until its formal Hebrew answer is verified
-and explicitly approved under the normal content and visual gates.
+context, and ask one focused question about sampled symmetrization and why it
+is generally only approximately invariant. Do not write a Q3(c) answer into
+the DOCX until its formal Hebrew answer is verified and explicitly approved
+under the normal content and visual gates.
