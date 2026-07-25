@@ -20,7 +20,7 @@ approved designs, and writes approved Hebrew answers.
 Do not duplicate stable style rules here. Do not use or modify
 LocationPipeline.
 
-## Accepted visual baseline
+## Preserved Q1-Q2 visual baseline
 
 - File: `old/HW4-Solution.pre-q3a-20260724-230819.docx`
 - SHA-256:
@@ -30,21 +30,21 @@ LocationPipeline.
   free parameters; if "layer" means an affine layer, the invariant bias adds
   one, for nine parameters in total.
 
-This is the last accepted style authority. It must remain unchanged.
+This remains the immutable recovery baseline through Question 2(e). It must
+remain unchanged.
 
-## Current working checkpoint
+## Current accepted checkpoint
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`
-- Git checkpoint: `5e52ec5` on `main`
-- Publication status: pushed, but explicitly rejected as a DOCX-format
-  checkpoint.
-
-Question 3(a)'s reasoning, formal Hebrew content, approved design, code, and
-tests remain valid. Its document structure and visual formatting are not
-approved. The current file is therefore a repair source, not a style
-authority and not a finished submission checkpoint.
+  `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`
+- Accepted scope: Question 1 through Question 3(a).
+- User visual approval: granted on 2026-07-25 after the corrected full-page
+  Microsoft Word render was shown.
+- Publication status: approved and promoted locally; Git push pending.
+- Rejected predecessor archived as
+  `old/HW4-Solution.rejected-q3a-20260725-125359.docx`, SHA-256
+  `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`.
 
 ## Gate record
 
@@ -56,7 +56,7 @@ authority and not a finished submission checkpoint.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed | present, but rejected formatting | fails prompt/forbidden-style gates | rejected | pushed only as rejected checkpoint |
+| Q3(a) | approved | approved | passed | approved checkpoint | passes | approved | approved; push pending |
 | Q3(b-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
@@ -76,14 +76,21 @@ Semantic approval never implies DOCX-format approval.
 These technical results may be reused when repairing the document; they do not
 need to be re-derived unless the design changes.
 
-## Identified Q3(a) format failure
+## Resolved Q3(a) format repair
 
-The Q3 prompt was retyped into eleven paragraphs using a newly invented
-`Original Question` style (Aptos 9 pt, gray). HW1-HW3 and accepted HW4 Q1-Q2
-instead place a centered, readable source excerpt immediately after the
-Question Heading 1. This structural mismatch is the primary rejected-format
-defect. Any additional RTL, font, heading, spacing, TOC, or pagination defects
-must be resolved under the full guide and verified in Word.
+- The complete original English prompt is now preserved as two readable,
+  high-resolution excerpts from the two source pages of `HW4.pdf`.
+- The rejected `Original Question` style is absent.
+- Question and subsection titles use the accepted Heading 1 and Heading 2
+  structures.
+- Hebrew prose inherits the accepted Word-native RTL paragraph behavior. The
+  seven direct `right` alignment overrides that Word rendered on the physical
+  left were removed; short lines now terminate at the physical right edge.
+- Display equations remain centered LTR Word equations.
+- The contract audit passes, and two independent Microsoft Word exports were
+  pixel-identical on all eleven pages.
+- The promoted main file was rendered again after promotion and matched the
+  visually approved candidate on all eleven pages.
 
 ## Infrastructure
 
@@ -96,16 +103,8 @@ must be resolved under the full guide and verified in Word.
 
 ## Precise next action
 
-Do not proceed to Q3(b) yet.
-
-First, create a Q3(a) repair candidate from the accepted pre-Q3(a) baseline,
-reuse the already approved Hebrew content and code results, insert the complete
-Q3 prompt as a high-resolution excerpt from `HW4.pdf`, and reproduce the
-accepted Heading 1, Heading 2, body, equation, header, TOC, font, and RTL
-patterns. Then:
-
-1. run `scripts/audit_homework_docx.py`;
-2. save, close, reopen, and export the exact candidate with Microsoft Word;
-3. inspect all changed/reflowed full pages and their neighbors;
-4. show those full-page renders to the user;
-5. wait for explicit visual approval before promotion, commit, or push.
+Continue collaboratively with Question 3(b): present its original English
+wording from the approved prompt image, give only brief course-oriented
+context, and ask one focused question about the student's reasoning. Do not
+write a Q3(b) answer into the DOCX until its formal Hebrew answer is verified
+and explicitly approved under the normal content and visual gates.
