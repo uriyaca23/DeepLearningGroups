@@ -41,7 +41,8 @@ remain unchanged.
 - Accepted scope: Question 1 through Question 3(a).
 - User visual approval: granted on 2026-07-25 after the corrected full-page
   Microsoft Word render was shown.
-- Publication status: approved and promoted locally; Git push pending.
+- Git checkpoint: `bfa6a0d` on `main`.
+- Publication status: published to `origin/main`.
 - Rejected predecessor archived as
   `old/HW4-Solution.rejected-q3a-20260725-125359.docx`, SHA-256
   `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`.
@@ -56,7 +57,7 @@ remain unchanged.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed | approved checkpoint | passes | approved | approved; push pending |
+| Q3(a) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(b-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
