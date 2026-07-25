@@ -41,8 +41,8 @@ remain unchanged.
 - Accepted scope: Question 1 through Question 3(b).
 - User visual approval: granted on 2026-07-25 after the full-page Microsoft
   Word renders of pages 11 and 12 were shown.
-- Git checkpoint: pending the approved-checkpoint commit.
-- Publication status: pending push to `origin/main`.
+- Git checkpoint: `842c46e` on `main`.
+- Publication status: published to `origin/main`.
 - Accepted Q3(a) predecessor archived as
   `old/HW4-Solution.pre-q3b-20260725-150335.docx`, SHA-256
   `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`.
@@ -60,8 +60,8 @@ remain unchanged.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | pending |
-| Q3(b) | approved | approved | passed | approved and promoted | passes | approved | pending |
+| Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | published |
+| Q3(b) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(c-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
