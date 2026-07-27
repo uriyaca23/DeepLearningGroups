@@ -41,8 +41,8 @@ remain unchanged.
 - Accepted scope: Question 1 through Question 3(c).
 - User visual approval: granted on 2026-07-27 for the Q3(c) addition and again
   for the exact Word candidate that unified Q3(a-c) at `n=7`.
-- Git checkpoint: pending in the current publication step on `main`.
-- Publication status: pending publication to `origin/main`.
+- Git checkpoint: `d07aeb3` on `main`.
+- Publication status: published to `origin/main`.
 - The accepted mixed-`n` Q3(c) predecessor is archived as
   `old/HW4-Solution.pre-q3-n7-revision-20260727-182303.docx`, SHA-256
   `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`.
@@ -66,8 +66,8 @@ remain unchanged.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed with unified `n=7` configuration | approved, revised, and promoted | passes | approved | pending current publication step |
-| Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | pending current publication step |
+| Q3(a) | approved | approved | passed with unified `n=7` configuration | approved, revised, and promoted | passes | approved | published |
+| Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | published |
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
