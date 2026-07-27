@@ -1,6 +1,6 @@
 # HW4 project state
 
-Last reconciled: 2026-07-25
+Last reconciled: 2026-07-27
 
 ## Objective
 
@@ -15,7 +15,7 @@ approved designs, and writes approved Hebrew answers.
 - `style/homework_style_contract.json`: machine-checkable Word/OOXML values.
 - `AGENTS.md`: mandatory entry point for future sessions.
 - `HW4.pdf`: authoritative assignment wording.
-- `q3_set_networks.py`: current approved Question 3(a) implementation.
+- `q3_set_networks.py`: current approved Question 3(a-c) implementation.
 
 Do not duplicate stable style rules here. Do not use or modify
 LocationPipeline.
@@ -37,12 +37,15 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`
-- Accepted scope: Question 1 through Question 3(b).
-- User visual approval: granted on 2026-07-25 after the full-page Microsoft
-  Word renders of pages 11 and 12 were shown.
-- Git checkpoint: `842c46e` on `main`.
-- Publication status: published to `origin/main`.
+  `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`
+- Accepted scope: Question 1 through Question 3(c).
+- User visual approval: granted on 2026-07-27 after the exact Microsoft Word
+  review candidate was opened and reviewed.
+- Git checkpoint: pending in the current publication step on `main`.
+- Publication status: pending publication to `origin/main`.
+- The accepted Q3(b) predecessor is archived as
+  `old/HW4-Solution.pre-q3c-review-20260727-173243.docx`, SHA-256
+  `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`.
 - Accepted Q3(a) predecessor archived as
   `old/HW4-Solution.pre-q3b-20260725-150335.docx`, SHA-256
   `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`.
@@ -62,12 +65,13 @@ remain unchanged.
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | published |
 | Q3(b) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q3(c-e) | not started | not started | not started | not started | not started | not started | not started |
+| Q3(c) | approved | approved | passed | approved and promoted | passes | approved | pending current publication step |
+| Q3(d-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
 Semantic approval never implies DOCX-format approval.
 
-## Q3(a-b) approved technical checkpoint
+## Q3(a-c) approved technical checkpoint
 
 - Shared experimental configuration: seed 2319, `n=5`, `d=3`, `p=4`, hidden
   width 32, `atol=1e-5`, and `rtol=0`.
@@ -82,6 +86,18 @@ Semantic approval never implies DOCX-format approval.
   MLP is non-invariant on the test input, while the averaged model has maximum
   absolute permutation error `2.980232239e-08`. An exhaustive check of all 120
   input permutations and a finite-gradient check also pass.
+- Q3(c): use `n=7`, `d=3`, `p=4`, hidden width 32, and seed 2319. Sample one
+  fixed subset of `B=2700` distinct permutations uniformly without replacement
+  from `S_7`, and reuse that same subset for both compared inputs.
+- The finite-population Monte Carlo calculation uses `N=7!=5040` and the
+  calibrated 95th-percentile coefficient `0.761`. Solving the resulting
+  absolute-error estimate for tolerance `10^-2` gives `B >= 2695.3`; the
+  approved rounded choice is `B=2700`, or about 53.6% of the full group and a
+  1.87-fold computation reduction.
+- Recorded Q3(c) results: the pure maximum-coordinate absolute test passes
+  with error `0.00699985027313 < 10^-2`. Structural tests also confirm that
+  the subset contains 2700 unique permutations, remains fixed between forward
+  passes, and is reproduced by seed 2319.
 
 These technical results may be reused in later comparisons; they do not need
 to be re-derived unless the design changes.
@@ -121,6 +137,25 @@ to be re-derived unless the design changes.
 - After promotion, a fresh read-only Word export of `HW4-Solution.docx`
   matched the approved candidate pixel-for-pixel on all twelve pages.
 
+## Approved Q3(c) document addition
+
+- Q3(c) uses an accepted Heading 2 clone, concise Hebrew prose in the
+  HW1-HW3 style, and Word-native displayed equations. No answer figure was
+  added.
+- The answer explains why a fixed proper subset is generally only
+  approximately invariant, derives the finite-population Monte Carlo estimate,
+  records how it led to `B=2700`, and reports the approved implementation and
+  absolute-error test.
+- All new Hebrew prose and the heading use the accepted native RTL behavior
+  and DejaVu Sans styles; displayed equations remain centered LTR Word
+  equations.
+- The mechanical contract passes. Microsoft Word saved, closed, reopened, and
+  exported the 13-page candidate. The changed pages were inspected at full
+  page, including a high-resolution check of the page-13 header.
+- The user explicitly approved the exact Word review candidate on 2026-07-27.
+  After promotion, a fresh read-only Word export of `HW4-Solution.docx`
+  matched the approved candidate pixel-for-pixel on all thirteen pages.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -132,9 +167,9 @@ to be re-derived unless the design changes.
 
 ## Precise next action
 
-Continue collaboratively with Question 3(c): present its original English
-wording from the approved prompt image, give only brief course-oriented
-context, and ask one focused question about sampled symmetrization and why it
-is generally only approximately invariant. Do not write a Q3(c) answer into
-the DOCX until its formal Hebrew answer is verified and explicitly approved
-under the normal content and visual gates.
+Continue collaboratively with Question 3(d): present its original English
+wording from `HW4.pdf`, give only brief course-oriented context, and ask one
+focused question about the student's proposed construction. Do not implement
+or write a Q3(d) answer into the DOCX until its design and formal Hebrew answer
+are verified and explicitly approved under the normal content and visual
+gates.

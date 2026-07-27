@@ -3,13 +3,14 @@
 External dependency: PyTorch.
 
 This file is developed one approved homework part at a time. It currently
-contains the canonization and group-averaging constructions from parts (a)
-and (b).
+contains the canonization, full group-averaging, and sampled group-averaging
+constructions from parts (a), (b), and (c).
 """
 
 from __future__ import annotations
 
 from itertools import permutations
+from math import factorial
 from typing import Optional
 
 import torch
@@ -125,12 +126,16 @@ class TwoLayerMLP(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        if x.ndim != 2 or tuple(x.shape) != (self.n, self.d):
-            raise ValueError(
-                f"Expected input shape {(self.n, self.d)}, got {tuple(x.shape)}"
-            )
+        if x.ndim == 2 and tuple(x.shape) == (self.n, self.d):
+            return self.network(x.reshape(-1))
 
-        return self.network(x.reshape(-1))
+        if x.ndim == 3 and tuple(x.shape[1:]) == (self.n, self.d):
+            return self.network(x.reshape(x.shape[0], -1))
+
+        raise ValueError(
+            f"Expected input shape {(self.n, self.d)} or "
+            f"(batch, {self.n}, {self.d}), got {tuple(x.shape)}"
+        )
 
 
 class SymmetrizedInvariantModel(nn.Module):
@@ -162,6 +167,59 @@ class SymmetrizedInvariantModel(nn.Module):
             for permutation in self.permutation_indices
         ]
         return torch.stack(outputs).mean(dim=0)
+
+
+class SampledSymmetrizedModel(nn.Module):
+    """Approximately invariant model using one fixed random permutation subset."""
+
+    def __init__(
+        self,
+        base_model: nn.Module,
+        n: int,
+        d: int,
+        subset_size: int,
+        subset_seed: int,
+    ) -> None:
+        super().__init__()
+
+        if n < 1 or d < 1:
+            raise ValueError("n and d must both be positive")
+
+        group_size = factorial(n)
+        if not 0 < subset_size < group_size:
+            raise ValueError(
+                f"subset_size must be between 1 and {group_size - 1}"
+            )
+
+        self.base_model = base_model
+        self.n = n
+        self.d = d
+        self.subset_size = subset_size
+        self.subset_seed = subset_seed
+
+        all_permutation_indices = torch.tensor(
+            list(permutations(range(n))),
+            dtype=torch.long,
+        )
+        generator = torch.Generator().manual_seed(subset_seed)
+        random_order = torch.randperm(
+            group_size,
+            generator=generator,
+        )
+        sampled_indices = all_permutation_indices[
+            random_order[:subset_size]
+        ]
+        self.register_buffer("permutation_indices", sampled_indices)
+
+    def forward(self, x: Tensor) -> Tensor:
+        if x.ndim != 2 or tuple(x.shape) != (self.n, self.d):
+            raise ValueError(
+                f"Expected input shape {(self.n, self.d)}, got {tuple(x.shape)}"
+            )
+
+        permuted_inputs = x[self.permutation_indices]
+        outputs = self.base_model(permuted_inputs)
+        return outputs.mean(dim=0)
 
 
 def test_canonization_invariance(
@@ -237,6 +295,108 @@ def test_symmetrization_invariance(
     )
 
 
+def sampled_symmetrization_max_error(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+    subset_size: int = 2700,
+    seed: int = 2319,
+) -> float:
+    """Return the maximum coordinate error for the approved Q3(c) test."""
+
+    torch.manual_seed(seed)
+
+    base_model = TwoLayerMLP(
+        n=n,
+        d=d,
+        output_dim=output_dim,
+        hidden_dim=hidden_dim,
+    )
+    model = SampledSymmetrizedModel(
+        base_model=base_model,
+        n=n,
+        d=d,
+        subset_size=subset_size,
+        subset_seed=seed,
+    )
+    model.eval()
+    x = torch.randn(n, d)
+    permutation = torch.randperm(n)
+    permuted_x = x[permutation]
+
+    with torch.no_grad():
+        output = model(x)
+        permuted_output = model(permuted_x)
+
+    return float((permuted_output - output).abs().max().item())
+
+
+def test_sampled_symmetrization_approximate_invariance(
+    *,
+    absolute_tolerance: float = 1e-2,
+) -> bool:
+    """Test approximate invariance using only an absolute error condition."""
+
+    maximum_error = sampled_symmetrization_max_error()
+    return maximum_error <= absolute_tolerance
+
+
+def test_sampled_subset_structure(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+    subset_size: int = 2700,
+    seed: int = 2319,
+) -> bool:
+    """Check that the sampled subset is unique, fixed, and reproducible."""
+
+    torch.manual_seed(seed)
+    model = SampledSymmetrizedModel(
+        base_model=TwoLayerMLP(
+            n=n,
+            d=d,
+            output_dim=output_dim,
+            hidden_dim=hidden_dim,
+        ),
+        n=n,
+        d=d,
+        subset_size=subset_size,
+        subset_seed=seed,
+    )
+    reproduced_model = SampledSymmetrizedModel(
+        base_model=TwoLayerMLP(
+            n=n,
+            d=d,
+            output_dim=output_dim,
+            hidden_dim=hidden_dim,
+        ),
+        n=n,
+        d=d,
+        subset_size=subset_size,
+        subset_seed=seed,
+    )
+
+    original_subset = model.permutation_indices.clone()
+    x = torch.randn(n, d)
+    with torch.no_grad():
+        model(x)
+        model(x)
+
+    return (
+        tuple(original_subset.shape) == (subset_size, n)
+        and torch.unique(original_subset, dim=0).shape[0] == subset_size
+        and torch.equal(model.permutation_indices, original_subset)
+        and torch.equal(
+            reproduced_model.permutation_indices,
+            original_subset,
+        )
+    )
+
+
 def test_lexicographic_sort_with_ties() -> bool:
     """Check canonization when early coordinates tie and rows repeat."""
 
@@ -300,12 +460,34 @@ def run_q3b_tests() -> bool:
     return invariance_passed
 
 
+def run_q3c_tests() -> bool:
+    """Run and print the approved Question 3(c) approximate-invariance check."""
+
+    absolute_tolerance = 1e-2
+    maximum_error = sampled_symmetrization_max_error()
+    invariance_passed = maximum_error <= absolute_tolerance
+    subset_structure_passed = test_sampled_subset_structure()
+
+    print(
+        "Q3(c) sampled approximate-invariance test:",
+        "PASS" if invariance_passed else "FAIL",
+        "(seed=2319, n=7, d=3, p=4, hidden=32, B=2700, "
+        f"absolute_tolerance=1e-2, max_abs_error={maximum_error:.12g})",
+    )
+    print(
+        "Q3(c) fixed, unique, reproducible subset test:",
+        "PASS" if subset_structure_passed else "FAIL",
+    )
+    return invariance_passed and subset_structure_passed
+
+
 def run_q3_tests() -> bool:
     """Run all implemented Question 3 checks."""
 
     q3a_passed = run_q3a_tests()
     q3b_passed = run_q3b_tests()
-    return q3a_passed and q3b_passed
+    q3c_passed = run_q3c_tests()
+    return q3a_passed and q3b_passed and q3c_passed
 
 
 if __name__ == "__main__":
