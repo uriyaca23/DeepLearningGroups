@@ -15,7 +15,7 @@ approved designs, and writes approved Hebrew answers.
 - `style/homework_style_contract.json`: machine-checkable Word/OOXML values.
 - `AGENTS.md`: mandatory entry point for future sessions.
 - `HW4.pdf`: authoritative assignment wording.
-- `q3_set_networks.py`: current approved Question 3(a-c) implementation.
+- `q3_set_networks.py`: current approved Question 3(a-d) implementation.
 
 Do not duplicate stable style rules here. Do not use or modify
 LocationPipeline.
@@ -37,12 +37,15 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `61A32D4B2B95821F273C5677669F76D80838B1D14D8B302238141589CCE54856`
-- Accepted scope: Question 1 through Question 3(c).
-- User visual approval: granted on 2026-07-27 for the Q3(c) addition and again
-  for the exact Word candidate that unified Q3(a-c) at `n=7`.
-- Git checkpoint: `d07aeb3` on `main`.
+  `7B8C1B62C049CB55DB4D146DB1796E1FAFAB954064430E4E509D948ACD6EF2A1`
+- Accepted scope: Question 1 through Question 3(d).
+- User visual approval: granted on 2026-07-27 for the Q3(d) addition and for
+  the corrected Q3(c) heading, `סעיף ג. סימטריה דגומה.`.
+- Git checkpoint: `9bec9da` on `main`.
 - Publication status: published to `origin/main`.
+- The accepted Q3(a-c) predecessor is archived as
+  `old/HW4-Solution.pre-q3d-review-20260727-184452.docx`, SHA-256
+  `61A32D4B2B95821F273C5677669F76D80838B1D14D8B302238141589CCE54856`.
 - The accepted mixed-`n` Q3(c) predecessor is archived as
   `old/HW4-Solution.pre-q3-n7-revision-20260727-182303.docx`, SHA-256
   `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`.
@@ -69,7 +72,8 @@ remain unchanged.
 | Q3(a) | approved | approved | passed with unified `n=7` configuration | approved, revised, and promoted | passes | approved | published |
 | Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | published |
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q3(d-e) | not started | not started | not started | not started | not started | not started | not started |
+| Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
+| Q3(e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
 Semantic approval never implies DOCX-format approval.
@@ -180,6 +184,46 @@ to be re-derived unless the design changes.
   promotion, a fresh read-only Word export matched the approved candidate
   pixel-for-pixel on all thirteen pages.
 
+## Q3(d) approved technical checkpoint
+
+- The equivariant linear layer uses two independent feature maps and one
+  shared bias:
+  `L(X)_i = X_i A + sum_{j != i} X_j B + b`. Equivalently, with the row
+  mean, it is implemented using the two matrices
+  `W_1 = A - B` and `W_2 = nB`.
+- The approved equivariant network has widths `3 -> 55 -> 4`, with a
+  pointwise ReLU between its two equivariant linear layers. Mean pooling over
+  the seven rows produces the final invariant four-dimensional output.
+- The width 55 gives 829 trainable DeepSets parameters, close to the 836
+  parameters of the approved ordinary `n=7` MLP.
+- Shared configuration: seed 2319, `n=7`, `d=3`, `p=4`, `atol=1e-5`, and
+  `rtol=0`.
+- Recorded maximum absolute errors are `1.19209289551e-7` for one equivariant
+  layer, `7.45058059692e-8` for the full equivariant stack, and
+  `2.98023223877e-8` after invariant mean pooling. All are below the approved
+  tolerance, and the finite-gradient test passes.
+- The full Q3(a-d) script and all Q3(a-c) regression checks pass.
+
+## Approved Q3(d) document addition
+
+- Q3(d) uses an accepted Heading 2 clone, concise Hebrew prose in the
+  HW1-HW3 style, and five centered Word-native display equations. No answer
+  figure was added.
+- The Q3(c) title was corrected to exactly
+  `סעיף ג. סימטריה דגומה.`; the rejected wording is absent.
+- The new Hebrew prose and headings inherit the accepted native RTL behavior
+  and DejaVu Sans styles. No forbidden direct right-alignment override was
+  introduced.
+- The mechanical contract passes. Microsoft Word saved, closed, reopened,
+  and exported the 13-page candidate successfully.
+- Pages 1-11 remained pixel-identical to the previous checkpoint. The
+  corrected Q3(c) heading on page 12 and the complete Q3(d) answer on page 13
+  passed full-page inspection; page 13 remained pixel-identical after the
+  heading-only correction.
+- The user explicitly approved the corrected Word candidate on 2026-07-27.
+  After promotion, a fresh read-only Word export of `HW4-Solution.docx`
+  matched the approved candidate pixel-for-pixel on all thirteen pages.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -188,13 +232,14 @@ to be re-derived unless the design changes.
 - Project dependencies recorded in `requirements.txt`.
 - Superseded DOCX checkpoints belong only under `old/`.
 - Candidates, renders, and generated reports belong under ignored `_qa/`.
+- Give the user the review-file path rather than opening Word on the screen;
+  open Word visibly only when the user explicitly requests it.
 
 ## Precise next action
 
-Continue collaboratively with Question 3(d): present its original English
-wording from `HW4.pdf` and propose the parameter-matched `3 -> 55 -> 4`
-DeepSets stack: it has 829 parameters versus 836 for the unified `n=7`
-flattened MLP. Ask for the student's explicit design approval before
-implementation. Do not write a Q3(d) answer into the DOCX until its design and
-formal Hebrew answer are verified and explicitly approved under the normal
-content and visual gates.
+Continue collaboratively with Question 3(e): present its original English
+wording from `HW4.pdf`, give only brief orienting context, and ask for the
+student's reasoning. Challenge mistakes with progressively stronger hints and
+formalize only the answer the student understands and approves. Do not
+implement or write the Q3(e) answer into the DOCX before its design and formal
+Hebrew answer pass the normal explicit approval gates.
