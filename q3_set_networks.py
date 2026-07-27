@@ -3,8 +3,8 @@
 External dependency: PyTorch.
 
 This file is developed one approved homework part at a time. It currently
-contains the canonization, full group-averaging, and sampled group-averaging
-constructions from parts (a), (b), and (c).
+contains the canonization, full group-averaging, sampled group-averaging, and
+DeepSets constructions from parts (a), (b), (c), and (d).
 """
 
 from __future__ import annotations
@@ -218,6 +218,75 @@ class SampledSymmetrizedModel(nn.Module):
         permuted_inputs = x[self.permutation_indices]
         outputs = self.base_model(permuted_inputs)
         return outputs.mean(dim=0)
+
+
+class DeepSetsEquivariantLinear(nn.Module):
+    """S_n-equivariant linear layer with local and mean-aggregated terms."""
+
+    def __init__(self, input_dim: int, output_dim: int) -> None:
+        super().__init__()
+
+        if input_dim < 1 or output_dim < 1:
+            raise ValueError("input_dim and output_dim must both be positive")
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.local_linear = nn.Linear(input_dim, output_dim, bias=True)
+        self.global_linear = nn.Linear(input_dim, output_dim, bias=False)
+
+    def forward(self, x: Tensor) -> Tensor:
+        if x.ndim < 2 or x.shape[-1] != self.input_dim:
+            raise ValueError(
+                "Expected shape (..., n, "
+                f"{self.input_dim}), got {tuple(x.shape)}"
+            )
+        if x.shape[-2] < 1:
+            raise ValueError("The row dimension n must be positive")
+
+        row_mean = x.mean(dim=-2, keepdim=True)
+        return self.local_linear(x) + self.global_linear(row_mean)
+
+
+class DeepSetsEquivariantNetwork(nn.Module):
+    """Two equivariant DeepSets layers with a pointwise ReLU between them."""
+
+    def __init__(
+        self,
+        input_dim: int = 3,
+        hidden_dim: int = 55,
+        output_dim: int = 4,
+    ) -> None:
+        super().__init__()
+
+        self.first_layer = DeepSetsEquivariantLinear(
+            input_dim=input_dim,
+            output_dim=hidden_dim,
+        )
+        self.activation = nn.ReLU()
+        self.second_layer = DeepSetsEquivariantLinear(
+            input_dim=hidden_dim,
+            output_dim=output_dim,
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.second_layer(self.activation(self.first_layer(x)))
+
+
+class MeanPooledInvariantModel(nn.Module):
+    """Invariant output obtained by mean-pooling equivariant row features."""
+
+    def __init__(self, equivariant_model: nn.Module) -> None:
+        super().__init__()
+        self.equivariant_model = equivariant_model
+
+    def forward(self, x: Tensor) -> Tensor:
+        equivariant_output = self.equivariant_model(x)
+        if equivariant_output.ndim < 2 or equivariant_output.shape[-2] < 1:
+            raise ValueError(
+                "Expected the equivariant model to return shape "
+                "(..., n, output_dim) with n >= 1"
+            )
+        return equivariant_output.mean(dim=-2)
 
 
 def canonization_invariance_max_error(
@@ -485,6 +554,157 @@ def test_sampled_subset_structure(
     )
 
 
+def deepsets_single_layer_equivariance_max_error(
+    *,
+    n: int = 7,
+    input_dim: int = 3,
+    output_dim: int = 55,
+    seed: int = 2319,
+) -> float:
+    """Return the maximum equivariance error of one DeepSets linear layer."""
+
+    torch.manual_seed(seed)
+    layer = DeepSetsEquivariantLinear(
+        input_dim=input_dim,
+        output_dim=output_dim,
+    )
+    layer.eval()
+    x = torch.randn(n, input_dim)
+    permutation = torch.randperm(n)
+
+    with torch.no_grad():
+        transformed_output = layer(x[permutation])
+        permuted_output = layer(x)[permutation]
+
+    return float(
+        (transformed_output - permuted_output).abs().max().item()
+    )
+
+
+def deepsets_stack_equivariance_max_error(
+    *,
+    n: int = 7,
+    input_dim: int = 3,
+    hidden_dim: int = 55,
+    output_dim: int = 4,
+    seed: int = 2319,
+) -> float:
+    """Return the maximum equivariance error of the complete DeepSets stack."""
+
+    torch.manual_seed(seed)
+    model = DeepSetsEquivariantNetwork(
+        input_dim=input_dim,
+        hidden_dim=hidden_dim,
+        output_dim=output_dim,
+    )
+    model.eval()
+    x = torch.randn(n, input_dim)
+    permutation = torch.randperm(n)
+
+    with torch.no_grad():
+        transformed_output = model(x[permutation])
+        permuted_output = model(x)[permutation]
+
+    return float(
+        (transformed_output - permuted_output).abs().max().item()
+    )
+
+
+def deepsets_pooled_invariance_max_error(
+    *,
+    n: int = 7,
+    input_dim: int = 3,
+    hidden_dim: int = 55,
+    output_dim: int = 4,
+    seed: int = 2319,
+) -> float:
+    """Return the maximum invariance error after mean pooling."""
+
+    torch.manual_seed(seed)
+    model = MeanPooledInvariantModel(
+        DeepSetsEquivariantNetwork(
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+        )
+    )
+    model.eval()
+    x = torch.randn(n, input_dim)
+    permutation = torch.randperm(n)
+
+    with torch.no_grad():
+        output = model(x)
+        permuted_output = model(x[permutation])
+
+    return float((permuted_output - output).abs().max().item())
+
+
+def test_deepsets_finite_gradients(
+    *,
+    n: int = 7,
+    input_dim: int = 3,
+    hidden_dim: int = 55,
+    output_dim: int = 4,
+    seed: int = 2319,
+) -> bool:
+    """Check finite parameter and input gradients through mean pooling."""
+
+    torch.manual_seed(seed)
+    model = MeanPooledInvariantModel(
+        DeepSetsEquivariantNetwork(
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+        )
+    )
+    x = torch.randn(n, input_dim, requires_grad=True)
+    model(x).square().sum().backward()
+
+    parameter_gradients_are_finite = all(
+        parameter.grad is not None and torch.isfinite(parameter.grad).all()
+        for parameter in model.parameters()
+    )
+    input_gradient_is_finite = (
+        x.grad is not None and torch.isfinite(x.grad).all()
+    )
+    return bool(parameter_gradients_are_finite and input_gradient_is_finite)
+
+
+def q3d_parameter_counts(
+    *,
+    n: int = 7,
+    input_dim: int = 3,
+    hidden_dim: int = 55,
+    output_dim: int = 4,
+    mlp_hidden_dim: int = 32,
+) -> tuple[int, int]:
+    """Return trainable parameter counts for DeepSets and the ordinary MLP."""
+
+    deepsets_model = DeepSetsEquivariantNetwork(
+        input_dim=input_dim,
+        hidden_dim=hidden_dim,
+        output_dim=output_dim,
+    )
+    ordinary_mlp = TwoLayerMLP(
+        n=n,
+        d=input_dim,
+        output_dim=output_dim,
+        hidden_dim=mlp_hidden_dim,
+    )
+
+    deepsets_count = sum(
+        parameter.numel()
+        for parameter in deepsets_model.parameters()
+        if parameter.requires_grad
+    )
+    ordinary_mlp_count = sum(
+        parameter.numel()
+        for parameter in ordinary_mlp.parameters()
+        if parameter.requires_grad
+    )
+    return deepsets_count, ordinary_mlp_count
+
+
 def test_lexicographic_sort_with_ties() -> bool:
     """Check canonization when early coordinates tie and rows repeat."""
 
@@ -611,13 +831,66 @@ def run_q3c_tests() -> bool:
     return invariance_passed and subset_structure_passed
 
 
+def run_q3d_tests() -> bool:
+    """Run the approved Question 3(d) equivariance and invariance checks."""
+
+    absolute_tolerance = 1e-5
+    single_layer_error = deepsets_single_layer_equivariance_max_error()
+    stack_error = deepsets_stack_equivariance_max_error()
+    pooled_error = deepsets_pooled_invariance_max_error()
+    single_layer_passed = single_layer_error <= absolute_tolerance
+    stack_passed = stack_error <= absolute_tolerance
+    pooled_passed = pooled_error <= absolute_tolerance
+    gradients_passed = test_deepsets_finite_gradients()
+    deepsets_count, ordinary_mlp_count = q3d_parameter_counts()
+    parameter_counts_passed = (
+        deepsets_count == 829 and ordinary_mlp_count == 836
+    )
+
+    print(
+        "Q3(d) single-layer equivariance test:",
+        "PASS" if single_layer_passed else "FAIL",
+        "(seed=2319, n=7, 3->55, atol=1e-5, rtol=0, "
+        f"max_abs_error={single_layer_error:.12g})",
+    )
+    print(
+        "Q3(d) full-stack equivariance test:",
+        "PASS" if stack_passed else "FAIL",
+        "(seed=2319, n=7, 3->55->4, pointwise ReLU, "
+        f"atol=1e-5, rtol=0, max_abs_error={stack_error:.12g})",
+    )
+    print(
+        "Q3(d) mean-pooled invariance test:",
+        "PASS" if pooled_passed else "FAIL",
+        "(seed=2319, n=7, output_dim=4, atol=1e-5, rtol=0, "
+        f"max_abs_error={pooled_error:.12g})",
+    )
+    print(
+        "Q3(d) finite-gradient test:",
+        "PASS" if gradients_passed else "FAIL",
+    )
+    print(
+        "Q3(d) exact parameter-count test:",
+        "PASS" if parameter_counts_passed else "FAIL",
+        f"(DeepSets={deepsets_count}, ordinary_n7_MLP={ordinary_mlp_count})",
+    )
+    return (
+        single_layer_passed
+        and stack_passed
+        and pooled_passed
+        and gradients_passed
+        and parameter_counts_passed
+    )
+
+
 def run_q3_tests() -> bool:
     """Run all implemented Question 3 checks."""
 
     q3a_passed = run_q3a_tests()
     q3b_passed = run_q3b_tests()
     q3c_passed = run_q3c_tests()
-    return q3a_passed and q3b_passed and q3c_passed
+    q3d_passed = run_q3d_tests()
+    return q3a_passed and q3b_passed and q3c_passed and q3d_passed
 
 
 if __name__ == "__main__":
