@@ -22,7 +22,7 @@ def _build_two_layer_mlp(
     hidden_dim: int,
     output_dim: int,
 ) -> nn.Sequential:
-    """Build the shared order-sensitive MLP architecture used in Q3(a-b)."""
+    """Build the shared order-sensitive MLP architecture used in Q3(a-c)."""
 
     return nn.Sequential(
         nn.Linear(input_dim, hidden_dim),
@@ -162,11 +162,9 @@ class SymmetrizedInvariantModel(nn.Module):
                 f"Expected input shape {(self.n, self.d)}, got {tuple(x.shape)}"
             )
 
-        outputs = [
-            self.base_model(x[permutation])
-            for permutation in self.permutation_indices
-        ]
-        return torch.stack(outputs).mean(dim=0)
+        permuted_inputs = x[self.permutation_indices]
+        outputs = self.base_model(permuted_inputs)
+        return outputs.mean(dim=0)
 
 
 class SampledSymmetrizedModel(nn.Module):
@@ -222,16 +220,15 @@ class SampledSymmetrizedModel(nn.Module):
         return outputs.mean(dim=0)
 
 
-def test_canonization_invariance(
+def canonization_invariance_max_error(
     *,
-    n: int = 5,
+    n: int = 7,
     d: int = 3,
     output_dim: int = 4,
     hidden_dim: int = 32,
     seed: int = 2319,
-    atol: float = 1e-5,
-) -> bool:
-    """Test F(pi . X) = F(X) for the approved Question 3(a) configuration."""
+) -> float:
+    """Return the Q3(a) maximum coordinate error for one row permutation."""
 
     torch.manual_seed(seed)
 
@@ -250,24 +247,39 @@ def test_canonization_invariance(
         output = model(x)
         permuted_output = model(permuted_x)
 
-    return torch.allclose(
-        permuted_output,
-        output,
-        atol=atol,
-        rtol=0.0,
-    )
+    return float((permuted_output - output).abs().max().item())
 
 
-def test_symmetrization_invariance(
+def test_canonization_invariance(
     *,
-    n: int = 5,
+    n: int = 7,
     d: int = 3,
     output_dim: int = 4,
     hidden_dim: int = 32,
     seed: int = 2319,
     atol: float = 1e-5,
 ) -> bool:
-    """Test F(pi . X) = F(X) for the approved Question 3(b) configuration."""
+    """Test F(pi . X) = F(X) for the approved Question 3(a) configuration."""
+
+    maximum_error = canonization_invariance_max_error(
+        n=n,
+        d=d,
+        output_dim=output_dim,
+        hidden_dim=hidden_dim,
+        seed=seed,
+    )
+    return maximum_error <= atol
+
+
+def symmetrization_invariance_max_error(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+    seed: int = 2319,
+) -> float:
+    """Return the Q3(b) maximum coordinate error for one row permutation."""
 
     torch.manual_seed(seed)
 
@@ -287,11 +299,87 @@ def test_symmetrization_invariance(
         output = model(x)
         permuted_output = model(permuted_x)
 
-    return torch.allclose(
-        permuted_output,
-        output,
-        atol=atol,
-        rtol=0.0,
+    return float((permuted_output - output).abs().max().item())
+
+
+def test_symmetrization_invariance(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+    seed: int = 2319,
+    atol: float = 1e-5,
+) -> bool:
+    """Test F(pi . X) = F(X) for the approved Question 3(b) configuration."""
+
+    maximum_error = symmetrization_invariance_max_error(
+        n=n,
+        d=d,
+        output_dim=output_dim,
+        hidden_dim=hidden_dim,
+        seed=seed,
+    )
+    return maximum_error <= atol
+
+
+def test_full_permutation_group_structure(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+) -> bool:
+    """Check exhaustively that Q3(b) averages each element of S_n once."""
+
+    model = SymmetrizedInvariantModel(
+        base_model=TwoLayerMLP(
+            n=n,
+            d=d,
+            output_dim=output_dim,
+            hidden_dim=hidden_dim,
+        ),
+        n=n,
+        d=d,
+    )
+    permutation_indices = model.permutation_indices
+    expected_rows = factorial(n)
+    expected_entries = torch.arange(n).expand(expected_rows, n)
+
+    return (
+        tuple(permutation_indices.shape) == (expected_rows, n)
+        and torch.unique(permutation_indices, dim=0).shape[0] == expected_rows
+        and torch.equal(
+            torch.sort(permutation_indices, dim=1).values,
+            expected_entries,
+        )
+    )
+
+
+def test_full_symmetrization_gradients(
+    *,
+    n: int = 7,
+    d: int = 3,
+    output_dim: int = 4,
+    hidden_dim: int = 32,
+    seed: int = 2319,
+) -> bool:
+    """Check that the exact Q3(b) average remains differentiable."""
+
+    torch.manual_seed(seed)
+    base_model = TwoLayerMLP(
+        n=n,
+        d=d,
+        output_dim=output_dim,
+        hidden_dim=hidden_dim,
+    )
+    model = SymmetrizedInvariantModel(base_model=base_model, n=n, d=d)
+    x = torch.randn(n, d)
+    model(x).sum().backward()
+
+    return all(
+        parameter.grad is not None and torch.isfinite(parameter.grad).all()
+        for parameter in base_model.parameters()
     )
 
 
@@ -407,18 +495,22 @@ def test_lexicographic_sort_with_ties() -> bool:
             [0.0, 9.0, 9.0],
             [1.0, 1.0, 4.0],
             [1.0, 2.0, 0.0],
+            [-1.0, 3.0, 2.0],
+            [1.0, 1.0, 4.0],
         ]
     )
     expected = torch.tensor(
         [
+            [-1.0, 3.0, 2.0],
             [0.0, 9.0, 9.0],
+            [1.0, 1.0, 4.0],
             [1.0, 1.0, 4.0],
             [1.0, 1.0, 5.0],
             [1.0, 2.0, 0.0],
             [1.0, 2.0, 0.0],
         ]
     )
-    permutation = torch.tensor([4, 2, 0, 3, 1])
+    permutation = torch.tensor([6, 4, 2, 0, 5, 3, 1])
 
     canonical_x = lexicographic_sort_rows(x)
     canonical_permuted_x = lexicographic_sort_rows(x[permutation])
@@ -428,36 +520,74 @@ def test_lexicographic_sort_with_ties() -> bool:
     )
 
 
+def test_canonization_over_all_permutations(
+    *,
+    n: int = 7,
+    d: int = 3,
+    seed: int = 2319,
+) -> bool:
+    """Check the Q3(a) canonical representative over all n! row orders."""
+
+    torch.manual_seed(seed)
+    x = torch.randn(n, d)
+    expected = lexicographic_sort_rows(x)
+
+    return all(
+        torch.equal(lexicographic_sort_rows(x[list(permutation)]), expected)
+        for permutation in permutations(range(n))
+    )
+
+
 def run_q3a_tests() -> bool:
     """Run and print all current Question 3(a) checks."""
 
-    invariance_passed = test_canonization_invariance()
+    absolute_tolerance = 1e-5
+    maximum_error = canonization_invariance_max_error()
+    invariance_passed = maximum_error <= absolute_tolerance
+    exhaustive_passed = test_canonization_over_all_permutations()
     ties_passed = test_lexicographic_sort_with_ties()
 
     print(
         "Q3(a) invariance test:",
         "PASS" if invariance_passed else "FAIL",
-        "(seed=2319, n=5, d=3, p=4, hidden=32, atol=1e-5, rtol=0)",
+        "(seed=2319, n=7, d=3, p=4, hidden=32, atol=1e-5, rtol=0, "
+        f"max_abs_error={maximum_error:.12g})",
+    )
+    print(
+        "Q3(a) exhaustive canonization test over all 5040 row permutations:",
+        "PASS" if exhaustive_passed else "FAIL",
     )
     print(
         "Q3(a) lexicographic tie test:",
         "PASS" if ties_passed else "FAIL",
     )
-    return invariance_passed and ties_passed
+    return invariance_passed and exhaustive_passed and ties_passed
 
 
 def run_q3b_tests() -> bool:
     """Run and print all current Question 3(b) checks."""
 
-    invariance_passed = test_symmetrization_invariance()
+    absolute_tolerance = 1e-5
+    maximum_error = symmetrization_invariance_max_error()
+    invariance_passed = maximum_error <= absolute_tolerance
+    group_structure_passed = test_full_permutation_group_structure()
+    gradients_passed = test_full_symmetrization_gradients()
 
     print(
         "Q3(b) invariance test:",
         "PASS" if invariance_passed else "FAIL",
-        "(seed=2319, n=5, d=3, p=4, hidden=32, permutations=120, "
-        "atol=1e-5, rtol=0)",
+        "(seed=2319, n=7, d=3, p=4, hidden=32, permutations=5040, "
+        f"atol=1e-5, rtol=0, max_abs_error={maximum_error:.12g})",
     )
-    return invariance_passed
+    print(
+        "Q3(b) exhaustive S_7 structure test (5040 unique permutations):",
+        "PASS" if group_structure_passed else "FAIL",
+    )
+    print(
+        "Q3(b) finite-gradient test:",
+        "PASS" if gradients_passed else "FAIL",
+    )
+    return invariance_passed and group_structure_passed and gradients_passed
 
 
 def run_q3c_tests() -> bool:

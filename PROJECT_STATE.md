@@ -37,12 +37,15 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`
+  `61A32D4B2B95821F273C5677669F76D80838B1D14D8B302238141589CCE54856`
 - Accepted scope: Question 1 through Question 3(c).
-- User visual approval: granted on 2026-07-27 after the exact Microsoft Word
-  review candidate was opened and reviewed.
-- Git checkpoint: `206ac5d` on `main`.
-- Publication status: published to `origin/main`.
+- User visual approval: granted on 2026-07-27 for the Q3(c) addition and again
+  for the exact Word candidate that unified Q3(a-c) at `n=7`.
+- Git checkpoint: pending in the current publication step on `main`.
+- Publication status: pending publication to `origin/main`.
+- The accepted mixed-`n` Q3(c) predecessor is archived as
+  `old/HW4-Solution.pre-q3-n7-revision-20260727-182303.docx`, SHA-256
+  `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`.
 - The accepted Q3(b) predecessor is archived as
   `old/HW4-Solution.pre-q3c-review-20260727-173243.docx`, SHA-256
   `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`.
@@ -63,8 +66,8 @@ remain unchanged.
 | Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
 | Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | published |
-| Q3(b) | approved | approved | passed | approved and promoted | passes | approved | published |
+| Q3(a) | approved | approved | passed with unified `n=7` configuration | approved, revised, and promoted | passes | approved | pending current publication step |
+| Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | pending current publication step |
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
@@ -73,22 +76,26 @@ Semantic approval never implies DOCX-format approval.
 
 ## Q3(a-c) approved technical checkpoint
 
-- Shared experimental configuration: seed 2319, `n=5`, `d=3`, `p=4`, hidden
-  width 32, `atol=1e-5`, and `rtol=0`.
+- Shared experimental configuration: seed 2319, `n=7`, `d=3`, `p=4`, and
+  hidden width 32.
+- Q3(a-b) use `atol=1e-5` and `rtol=0`; Q3(c) uses the separately approved
+  pure maximum-coordinate absolute tolerance `1e-2`.
 - Q3(a): canonize rows lexicographically, flatten the canonical matrix, and
   apply a two-layer MLP with one ReLU.
 - Q3(b): apply the same ordinary order-sensitive two-layer MLP to every one of
-  the `5! = 120` row permutations and average the resulting output vectors.
+  the `7! = 5040` row permutations and average the resulting output vectors.
 - Implementation: `q3_set_networks.py`.
 - Recorded Q3(a) results: required invariance test passes; the
-  partial-tie/duplicate-row test also passes.
+  partial-tie/duplicate-row test and an exhaustive check over all 5040 row
+  permutations also pass. The maximum absolute error is zero.
 - Recorded Q3(b) results: required invariance test passes; the ordinary base
   MLP is non-invariant on the test input, while the averaged model has maximum
-  absolute permutation error `2.980232239e-08`. An exhaustive check of all 120
-  input permutations and a finite-gradient check also pass.
-- Q3(c): use `n=7`, `d=3`, `p=4`, hidden width 32, and seed 2319. Sample one
-  fixed subset of `B=2700` distinct permutations uniformly without replacement
-  from `S_7`, and reuse that same subset for both compared inputs.
+  absolute permutation error `3.72529029846e-09`. The structural check confirms
+  all 5040 elements of `S_7` occur exactly once, and the finite-gradient check
+  also passes.
+- Q3(c): sample one fixed subset of `B=2700` distinct permutations uniformly
+  without replacement from `S_7`, and reuse that same subset for both compared
+  inputs.
 - The finite-population Monte Carlo calculation uses `N=7!=5040` and the
   calibrated 95th-percentile coefficient `0.761`. Solving the resulting
   absolute-error estimate for tolerance `10^-2` gives `B >= 2695.3`; the
@@ -120,9 +127,9 @@ to be re-derived unless the design changes.
 
 ## Approved Q3(b) document addition
 
-- Q3(a)'s experiment was revised from `n=20` to the user-approved `n=5` so
-  parts (a) and (b) use the same setting. Its displayed MLP architecture now
-  records the explicitly approved hidden width 32.
+- Q3(a-b) now use the user-approved common value `n=7`. The flattened MLP
+  input dimension is therefore 21, while the explicitly approved hidden width
+  remains 32 and the output dimension remains 4.
 - Q3(b) uses an accepted Heading 2 clone, concise Hebrew prose in the
   HW1-HW3 style, and three centered Word-native equations. No answer figure
   was added.
@@ -156,6 +163,23 @@ to be re-derived unless the design changes.
   After promotion, a fresh read-only Word export of `HW4-Solution.docx`
   matched the approved candidate pixel-for-pixel on all thirteen pages.
 
+## Approved Q3(a-c) `n=7` unification revision
+
+- At the user's request, Q3(a) and Q3(b) were revised from `n=5` to `n=7`;
+  Q3(c) already used `n=7`.
+- Q3(b) now records the domain `R^(7x3)`, flattened dimension 21, exact
+  averaging over `7! = 5040` permutations, the proof over `S_7`, and the new
+  measured maximum error `3.73 * 10^-9`.
+- The code batches the 5040 evaluations for efficiency without changing the
+  exact full-group average.
+- The mechanical contract passes. Microsoft Word saved, reopened, and exported
+  the 13-page candidate; pages 1-10 and 13 remained pixel-identical to the
+  prior checkpoint, while revised pages 11-12 passed full-page RTL, header,
+  font, heading, and equation inspection.
+- The user explicitly approved the exact Word candidate on 2026-07-27. After
+  promotion, a fresh read-only Word export matched the approved candidate
+  pixel-for-pixel on all thirteen pages.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -168,8 +192,9 @@ to be re-derived unless the design changes.
 ## Precise next action
 
 Continue collaboratively with Question 3(d): present its original English
-wording from `HW4.pdf`, give only brief course-oriented context, and ask one
-focused question about the student's proposed construction. Do not implement
-or write a Q3(d) answer into the DOCX until its design and formal Hebrew answer
-are verified and explicitly approved under the normal content and visual
-gates.
+wording from `HW4.pdf` and propose the parameter-matched `3 -> 55 -> 4`
+DeepSets stack: it has 829 parameters versus 836 for the unified `n=7`
+flattened MLP. Ask for the student's explicit design approval before
+implementation. Do not write a Q3(d) answer into the DOCX until its design and
+formal Hebrew answer are verified and explicitly approved under the normal
+content and visual gates.
