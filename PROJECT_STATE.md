@@ -41,8 +41,8 @@ remain unchanged.
 - Accepted scope: Question 1 through Question 3(c).
 - User visual approval: granted on 2026-07-27 after the exact Microsoft Word
   review candidate was opened and reviewed.
-- Git checkpoint: pending in the current publication step on `main`.
-- Publication status: pending publication to `origin/main`.
+- Git checkpoint: `206ac5d` on `main`.
+- Publication status: published to `origin/main`.
 - The accepted Q3(b) predecessor is archived as
   `old/HW4-Solution.pre-q3c-review-20260727-173243.docx`, SHA-256
   `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`.
@@ -65,7 +65,7 @@ remain unchanged.
 | Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
 | Q3(a) | approved | approved | passed with revised `n=5` configuration | approved, revised, and promoted | passes | approved | published |
 | Q3(b) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q3(c) | approved | approved | passed | approved and promoted | passes | approved | pending current publication step |
+| Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d-e) | not started | not started | not started | not started | not started | not started | not started |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
