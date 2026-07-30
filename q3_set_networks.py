@@ -17,6 +17,15 @@ import torch
 from torch import Tensor, nn
 
 
+DEFAULT_N = 7
+DEFAULT_D = 3
+DEFAULT_OUTPUT_DIM = DEFAULT_D
+DEFAULT_MLP_HIDDEN_DIM = 32
+DEFAULT_DEEPSETS_HIDDEN_DIM = 62
+DEFAULT_SUBSET_SIZE = 2700
+DEFAULT_SEED = 2319
+
+
 def _build_two_layer_mlp(
     input_dim: int,
     hidden_dim: int,
@@ -252,9 +261,9 @@ class DeepSetsEquivariantNetwork(nn.Module):
 
     def __init__(
         self,
-        input_dim: int = 3,
-        hidden_dim: int = 55,
-        output_dim: int = 4,
+        input_dim: int = DEFAULT_D,
+        hidden_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+        output_dim: int = DEFAULT_OUTPUT_DIM,
     ) -> None:
         super().__init__()
 
@@ -291,11 +300,11 @@ class MeanPooledInvariantModel(nn.Module):
 
 def canonization_invariance_max_error(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the Q3(a) maximum coordinate error for one row permutation."""
 
@@ -321,11 +330,11 @@ def canonization_invariance_max_error(
 
 def test_canonization_invariance(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
     atol: float = 1e-5,
 ) -> bool:
     """Test F(pi . X) = F(X) for the approved Question 3(a) configuration."""
@@ -342,11 +351,11 @@ def test_canonization_invariance(
 
 def symmetrization_invariance_max_error(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the Q3(b) maximum coordinate error for one row permutation."""
 
@@ -373,11 +382,11 @@ def symmetrization_invariance_max_error(
 
 def test_symmetrization_invariance(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
     atol: float = 1e-5,
 ) -> bool:
     """Test F(pi . X) = F(X) for the approved Question 3(b) configuration."""
@@ -394,10 +403,10 @@ def test_symmetrization_invariance(
 
 def test_full_permutation_group_structure(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
 ) -> bool:
     """Check exhaustively that Q3(b) averages each element of S_n once."""
 
@@ -427,11 +436,11 @@ def test_full_permutation_group_structure(
 
 def test_full_symmetrization_gradients(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> bool:
     """Check that the exact Q3(b) average remains differentiable."""
 
@@ -454,12 +463,12 @@ def test_full_symmetrization_gradients(
 
 def sampled_symmetrization_max_error(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    subset_size: int = 2700,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    subset_size: int = DEFAULT_SUBSET_SIZE,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the maximum coordinate error for the approved Q3(c) test."""
 
@@ -502,12 +511,12 @@ def test_sampled_symmetrization_approximate_invariance(
 
 def test_sampled_subset_structure(
     *,
-    n: int = 7,
-    d: int = 3,
-    output_dim: int = 4,
-    hidden_dim: int = 32,
-    subset_size: int = 2700,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
+    subset_size: int = DEFAULT_SUBSET_SIZE,
+    seed: int = DEFAULT_SEED,
 ) -> bool:
     """Check that the sampled subset is unique, fixed, and reproducible."""
 
@@ -556,10 +565,10 @@ def test_sampled_subset_structure(
 
 def deepsets_single_layer_equivariance_max_error(
     *,
-    n: int = 7,
-    input_dim: int = 3,
-    output_dim: int = 55,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    input_dim: int = DEFAULT_D,
+    output_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the maximum equivariance error of one DeepSets linear layer."""
 
@@ -583,11 +592,11 @@ def deepsets_single_layer_equivariance_max_error(
 
 def deepsets_stack_equivariance_max_error(
     *,
-    n: int = 7,
-    input_dim: int = 3,
-    hidden_dim: int = 55,
-    output_dim: int = 4,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    input_dim: int = DEFAULT_D,
+    hidden_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the maximum equivariance error of the complete DeepSets stack."""
 
@@ -612,11 +621,11 @@ def deepsets_stack_equivariance_max_error(
 
 def deepsets_pooled_invariance_max_error(
     *,
-    n: int = 7,
-    input_dim: int = 3,
-    hidden_dim: int = 55,
-    output_dim: int = 4,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    input_dim: int = DEFAULT_D,
+    hidden_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> float:
     """Return the maximum invariance error after mean pooling."""
 
@@ -641,11 +650,11 @@ def deepsets_pooled_invariance_max_error(
 
 def test_deepsets_finite_gradients(
     *,
-    n: int = 7,
-    input_dim: int = 3,
-    hidden_dim: int = 55,
-    output_dim: int = 4,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    input_dim: int = DEFAULT_D,
+    hidden_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    seed: int = DEFAULT_SEED,
 ) -> bool:
     """Check finite parameter and input gradients through mean pooling."""
 
@@ -672,11 +681,11 @@ def test_deepsets_finite_gradients(
 
 def q3d_parameter_counts(
     *,
-    n: int = 7,
-    input_dim: int = 3,
-    hidden_dim: int = 55,
-    output_dim: int = 4,
-    mlp_hidden_dim: int = 32,
+    n: int = DEFAULT_N,
+    input_dim: int = DEFAULT_D,
+    hidden_dim: int = DEFAULT_DEEPSETS_HIDDEN_DIM,
+    output_dim: int = DEFAULT_OUTPUT_DIM,
+    mlp_hidden_dim: int = DEFAULT_MLP_HIDDEN_DIM,
 ) -> tuple[int, int]:
     """Return trainable parameter counts for DeepSets and the ordinary MLP."""
 
@@ -703,6 +712,31 @@ def q3d_parameter_counts(
         if parameter.requires_grad
     )
     return deepsets_count, ordinary_mlp_count
+
+
+def test_shared_output_dimension_configuration() -> bool:
+    """Check that every Q3 architecture uses p=d for the shared experiment."""
+
+    canonization_model = CanonizationInvariantMLP(
+        n=DEFAULT_N,
+        d=DEFAULT_D,
+        output_dim=DEFAULT_OUTPUT_DIM,
+        hidden_dim=DEFAULT_MLP_HIDDEN_DIM,
+    )
+    ordinary_mlp = TwoLayerMLP(
+        n=DEFAULT_N,
+        d=DEFAULT_D,
+        output_dim=DEFAULT_OUTPUT_DIM,
+        hidden_dim=DEFAULT_MLP_HIDDEN_DIM,
+    )
+    deepsets_model = DeepSetsEquivariantNetwork()
+
+    return (
+        DEFAULT_OUTPUT_DIM == DEFAULT_D
+        and canonization_model.mlp[-1].out_features == DEFAULT_D
+        and ordinary_mlp.network[-1].out_features == DEFAULT_D
+        and deepsets_model.second_layer.output_dim == DEFAULT_D
+    )
 
 
 def test_lexicographic_sort_with_ties() -> bool:
@@ -742,9 +776,9 @@ def test_lexicographic_sort_with_ties() -> bool:
 
 def test_canonization_over_all_permutations(
     *,
-    n: int = 7,
-    d: int = 3,
-    seed: int = 2319,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    seed: int = DEFAULT_SEED,
 ) -> bool:
     """Check the Q3(a) canonical representative over all n! row orders."""
 
@@ -770,7 +804,9 @@ def run_q3a_tests() -> bool:
     print(
         "Q3(a) invariance test:",
         "PASS" if invariance_passed else "FAIL",
-        "(seed=2319, n=7, d=3, p=4, hidden=32, atol=1e-5, rtol=0, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, d={DEFAULT_D}, "
+        f"p={DEFAULT_OUTPUT_DIM}, hidden={DEFAULT_MLP_HIDDEN_DIM}, "
+        "atol=1e-5, rtol=0, "
         f"max_abs_error={maximum_error:.12g})",
     )
     print(
@@ -796,7 +832,9 @@ def run_q3b_tests() -> bool:
     print(
         "Q3(b) invariance test:",
         "PASS" if invariance_passed else "FAIL",
-        "(seed=2319, n=7, d=3, p=4, hidden=32, permutations=5040, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, d={DEFAULT_D}, "
+        f"p={DEFAULT_OUTPUT_DIM}, hidden={DEFAULT_MLP_HIDDEN_DIM}, "
+        f"permutations={factorial(DEFAULT_N)}, "
         f"atol=1e-5, rtol=0, max_abs_error={maximum_error:.12g})",
     )
     print(
@@ -821,7 +859,9 @@ def run_q3c_tests() -> bool:
     print(
         "Q3(c) sampled approximate-invariance test:",
         "PASS" if invariance_passed else "FAIL",
-        "(seed=2319, n=7, d=3, p=4, hidden=32, B=2700, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, d={DEFAULT_D}, "
+        f"p={DEFAULT_OUTPUT_DIM}, hidden={DEFAULT_MLP_HIDDEN_DIM}, "
+        f"B={DEFAULT_SUBSET_SIZE}, "
         f"absolute_tolerance=1e-2, max_abs_error={maximum_error:.12g})",
     )
     print(
@@ -843,26 +883,44 @@ def run_q3d_tests() -> bool:
     pooled_passed = pooled_error <= absolute_tolerance
     gradients_passed = test_deepsets_finite_gradients()
     deepsets_count, ordinary_mlp_count = q3d_parameter_counts()
+    expected_deepsets_count = (
+        (2 * DEFAULT_D * DEFAULT_DEEPSETS_HIDDEN_DIM)
+        + DEFAULT_DEEPSETS_HIDDEN_DIM
+        + (2 * DEFAULT_DEEPSETS_HIDDEN_DIM * DEFAULT_OUTPUT_DIM)
+        + DEFAULT_OUTPUT_DIM
+    )
+    expected_mlp_count = (
+        (DEFAULT_N * DEFAULT_D * DEFAULT_MLP_HIDDEN_DIM)
+        + DEFAULT_MLP_HIDDEN_DIM
+        + (DEFAULT_MLP_HIDDEN_DIM * DEFAULT_OUTPUT_DIM)
+        + DEFAULT_OUTPUT_DIM
+    )
     parameter_counts_passed = (
-        deepsets_count == 829 and ordinary_mlp_count == 836
+        deepsets_count == expected_deepsets_count == 809
+        and ordinary_mlp_count == expected_mlp_count == 803
     )
 
     print(
         "Q3(d) single-layer equivariance test:",
         "PASS" if single_layer_passed else "FAIL",
-        "(seed=2319, n=7, 3->55, atol=1e-5, rtol=0, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, "
+        f"{DEFAULT_D}->{DEFAULT_DEEPSETS_HIDDEN_DIM}, "
+        "atol=1e-5, rtol=0, "
         f"max_abs_error={single_layer_error:.12g})",
     )
     print(
         "Q3(d) full-stack equivariance test:",
         "PASS" if stack_passed else "FAIL",
-        "(seed=2319, n=7, 3->55->4, pointwise ReLU, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, "
+        f"{DEFAULT_D}->{DEFAULT_DEEPSETS_HIDDEN_DIM}"
+        f"->{DEFAULT_OUTPUT_DIM}, pointwise ReLU, "
         f"atol=1e-5, rtol=0, max_abs_error={stack_error:.12g})",
     )
     print(
         "Q3(d) mean-pooled invariance test:",
         "PASS" if pooled_passed else "FAIL",
-        "(seed=2319, n=7, output_dim=4, atol=1e-5, rtol=0, "
+        f"(seed={DEFAULT_SEED}, n={DEFAULT_N}, "
+        f"output_dim={DEFAULT_OUTPUT_DIM}, atol=1e-5, rtol=0, "
         f"max_abs_error={pooled_error:.12g})",
     )
     print(
@@ -890,7 +948,18 @@ def run_q3_tests() -> bool:
     q3b_passed = run_q3b_tests()
     q3c_passed = run_q3c_tests()
     q3d_passed = run_q3d_tests()
-    return q3a_passed and q3b_passed and q3c_passed and q3d_passed
+    dimensions_passed = test_shared_output_dimension_configuration()
+    print(
+        "Q3 shared p=d=3 output-dimension test:",
+        "PASS" if dimensions_passed else "FAIL",
+    )
+    return (
+        q3a_passed
+        and q3b_passed
+        and q3c_passed
+        and q3d_passed
+        and dimensions_passed
+    )
 
 
 if __name__ == "__main__":

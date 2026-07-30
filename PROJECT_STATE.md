@@ -1,6 +1,6 @@
 # HW4 project state
 
-Last reconciled: 2026-07-27
+Last reconciled: 2026-07-30
 
 ## Objective
 
@@ -37,12 +37,16 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `7B8C1B62C049CB55DB4D146DB1796E1FAFAB954064430E4E509D948ACD6EF2A1`
+  `EED29FB0BB6BFECBD1D2656D8CF10A4A38027419B958554262E93F555577A326`
 - Accepted scope: Question 1 through Question 3(d).
-- User visual approval: granted on 2026-07-27 for the Q3(d) addition and for
-  the corrected Q3(c) heading, `סעיף ג. סימטריה דגומה.`.
-- Git checkpoint: `9bec9da` on `main`.
-- Publication status: published to `origin/main`.
+- User visual approval: granted on 2026-07-30 for the unified
+  input/output-feature revision through Q3(d), including the updated
+  calculations and Word rendering.
+- Git checkpoint: the accepted revision is the repository `HEAD` on `main`.
+- Publication status: published to `origin/main` on 2026-07-30.
+- The previous accepted Q3(a-d) checkpoint is archived as
+  `old/HW4-Solution.pre-output3-consistency-20260730-160856.docx`, SHA-256
+  `7B8C1B62C049CB55DB4D146DB1796E1FAFAB954064430E4E509D948ACD6EF2A1`.
 - The accepted Q3(a-c) predecessor is archived as
   `old/HW4-Solution.pre-q3d-review-20260727-184452.docx`, SHA-256
   `61A32D4B2B95821F273C5677669F76D80838B1D14D8B302238141589CCE54856`.
@@ -80,7 +84,7 @@ Semantic approval never implies DOCX-format approval.
 
 ## Q3(a-c) approved technical checkpoint
 
-- Shared experimental configuration: seed 2319, `n=7`, `d=3`, `p=4`, and
+- Shared experimental configuration: seed 2319, `n=7`, `d=3`, `p=3`, and
   hidden width 32.
 - Q3(a-b) use `atol=1e-5` and `rtol=0`; Q3(c) uses the separately approved
   pure maximum-coordinate absolute tolerance `1e-2`.
@@ -94,19 +98,19 @@ Semantic approval never implies DOCX-format approval.
   permutations also pass. The maximum absolute error is zero.
 - Recorded Q3(b) results: required invariance test passes; the ordinary base
   MLP is non-invariant on the test input, while the averaged model has maximum
-  absolute permutation error `3.72529029846e-09`. The structural check confirms
+  absolute permutation error `2.98023223877e-08`. The structural check confirms
   all 5040 elements of `S_7` occur exactly once, and the finite-gradient check
   also passes.
 - Q3(c): sample one fixed subset of `B=2700` distinct permutations uniformly
   without replacement from `S_7`, and reuse that same subset for both compared
   inputs.
 - The finite-population Monte Carlo calculation uses `N=7!=5040` and the
-  calibrated 95th-percentile coefficient `0.761`. Solving the resulting
-  absolute-error estimate for tolerance `10^-2` gives `B >= 2695.3`; the
+  calibrated 95th-percentile coefficient `0.7618`. Solving the resulting
+  absolute-error estimate for tolerance `10^-2` gives `B >= 2697.7`; the
   approved rounded choice is `B=2700`, or about 53.6% of the full group and a
   1.87-fold computation reduction.
 - Recorded Q3(c) results: the pure maximum-coordinate absolute test passes
-  with error `0.00699985027313 < 10^-2`. Structural tests also confirm that
+  with error `0.00395260751247 < 10^-2`. Structural tests also confirm that
   the subset contains 2700 unique permutations, remains fixed between forward
   passes, and is reproduced by seed 2319.
 
@@ -133,7 +137,7 @@ to be re-derived unless the design changes.
 
 - Q3(a-b) now use the user-approved common value `n=7`. The flattened MLP
   input dimension is therefore 21, while the explicitly approved hidden width
-  remains 32 and the output dimension remains 4.
+  remains 32 and the output dimension is 3.
 - Q3(b) uses an accepted Heading 2 clone, concise Hebrew prose in the
   HW1-HW3 style, and three centered Word-native equations. No answer figure
   was added.
@@ -191,16 +195,16 @@ to be re-derived unless the design changes.
   `L(X)_i = X_i A + sum_{j != i} X_j B + b`. Equivalently, with the row
   mean, it is implemented using the two matrices
   `W_1 = A - B` and `W_2 = nB`.
-- The approved equivariant network has widths `3 -> 55 -> 4`, with a
+- The approved equivariant network has widths `3 -> 62 -> 3`, with a
   pointwise ReLU between its two equivariant linear layers. Mean pooling over
-  the seven rows produces the final invariant four-dimensional output.
-- The width 55 gives 829 trainable DeepSets parameters, close to the 836
+  the seven rows produces the final invariant three-dimensional output.
+- The width 62 gives 809 trainable DeepSets parameters, close to the 803
   parameters of the approved ordinary `n=7` MLP.
-- Shared configuration: seed 2319, `n=7`, `d=3`, `p=4`, `atol=1e-5`, and
+- Shared configuration: seed 2319, `n=7`, `d=3`, `p=3`, `atol=1e-5`, and
   `rtol=0`.
 - Recorded maximum absolute errors are `1.19209289551e-7` for one equivariant
-  layer, `7.45058059692e-8` for the full equivariant stack, and
-  `2.98023223877e-8` after invariant mean pooling. All are below the approved
+  layer, `1.19209289551e-7` for the full equivariant stack, and
+  `0` after invariant mean pooling. All are below the approved
   tolerance, and the finite-gradient test passes.
 - The full Q3(a-d) script and all Q3(a-c) regression checks pass.
 
@@ -223,6 +227,23 @@ to be re-derived unless the design changes.
 - The user explicitly approved the corrected Word candidate on 2026-07-27.
   After promotion, a fresh read-only Word export of `HW4-Solution.docx`
   matched the approved candidate pixel-for-pixel on all thirteen pages.
+
+## Approved Q3 output-dimension consistency revision
+
+- At the user's request, the Q3(a-c) ordinary MLP and the Q3(d) DeepSets
+  network now share the same input- and output-feature requirement:
+  `n=7`, `d=3`, and `p=d=3`.
+- The ordinary flattened MLP is `21 -> 32 -> 3` with 803 trainable
+  parameters. The comparison DeepSets network is `3 -> 62 -> 3` with 809
+  trainable parameters, a difference of six parameters.
+- All Q3(a-d) calculations and tests were rerun. The revised Q3(c)
+  finite-population estimate keeps `B=2700`, now using coefficient `0.7618`
+  and the bound `B >= 2697.7`.
+- The user explicitly approved the exact revised Word review copy on
+  2026-07-30. Its mechanical audit passed; Microsoft Word saved, reopened,
+  and exported it successfully; and all 13 pages passed visual inspection.
+- After promotion, a fresh read-only Word export of `HW4-Solution.docx`
+  matched the approved candidate pixel-for-pixel on all 13 pages.
 
 ## Infrastructure
 
