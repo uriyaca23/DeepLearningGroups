@@ -181,8 +181,9 @@ an explanatory calculation merely for decoration.
 ### R-WRITE-4 — Terminology and mixed language
 
 - Prefer the terminology used in the course.
-- Standard technical names such as `MLP`, `PyTorch`, `torch.allclose`, or
-  `argsort` may remain in English when that is clearer.
+- Use the standard English name for technical terms when a Hebrew translation
+  or transliteration would sound uncommon or awkward. Examples include `MLP`,
+  `PyTorch`, `torch.allclose`, `argsort`, `batch size`, and `batch order`.
 - Keep notation consistent throughout an answer.
 - Isolate English and mathematics correctly inside RTL prose; never switch the
   whole Hebrew paragraph to LTR merely because it contains an English token.

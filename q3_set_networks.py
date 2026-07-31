@@ -3,18 +3,26 @@
 External dependency: PyTorch.
 
 This file is developed one approved homework part at a time. It currently
-contains the canonization, full group-averaging, sampled group-averaging, and
-DeepSets constructions from parts (a), (b), (c), and (d).
+contains the canonization, full group-averaging, sampled group-averaging,
+DeepSets, and data-augmentation constructions from parts (a)-(e).
 """
 
 from __future__ import annotations
 
+import copy
+import json
+from dataclasses import dataclass
 from itertools import permutations
 from math import factorial
+from pathlib import Path
 from typing import Optional
 
+import matplotlib
 import torch
 from torch import Tensor, nn
+
+matplotlib.use("Agg")
+from matplotlib import pyplot as plt
 
 
 DEFAULT_N = 7
@@ -24,6 +32,15 @@ DEFAULT_MLP_HIDDEN_DIM = 32
 DEFAULT_DEEPSETS_HIDDEN_DIM = 62
 DEFAULT_SUBSET_SIZE = 2700
 DEFAULT_SEED = 2319
+DEFAULT_DATASET_SIZE = 1000
+DEFAULT_TRAIN_SIZE = 700
+DEFAULT_VAL_SIZE = 150
+DEFAULT_TEST_SIZE = 150
+DEFAULT_BATCH_SIZE = 64
+DEFAULT_LEARNING_RATE = 1e-4
+DEFAULT_MAX_EPOCHS = 2000
+DEFAULT_EARLY_STOPPING_PATIENCE = 100
+DEFAULT_Q3E_ATOL = 1e-2
 
 
 def _build_two_layer_mlp(
@@ -296,6 +313,595 @@ class MeanPooledInvariantModel(nn.Module):
                 "(..., n, output_dim) with n >= 1"
             )
         return equivariant_output.mean(dim=-2)
+
+
+@dataclass(frozen=True)
+class Q3EDataset:
+    """Synthetic Question 3(e) data and its latent Gaussian parameters."""
+
+    inputs: Tensor
+    targets: Tensor
+    means: Tensor
+    variances: Tensor
+
+
+@dataclass(frozen=True)
+class Q3EMetrics:
+    """Approximation and invariance metrics on one fixed evaluation set."""
+
+    approximation_mse: float
+    mean_l2_invariance_error: float
+    max_absolute_invariance_error: float
+
+
+@dataclass
+class Q3ETrainingRun:
+    """A trained model together with its early-stopping history."""
+
+    model: TwoLayerMLP
+    training_losses: list[float]
+    validation_losses: list[float]
+    best_epoch: int
+    best_validation_mse: float
+
+
+@dataclass(frozen=True)
+class Q3EExperimentResult:
+    """Complete before/after comparison for the approved Q3(e) experiment."""
+
+    initial_metrics: Q3EMetrics
+    augmented_metrics: Q3EMetrics
+    control_metrics: Q3EMetrics
+    augmented_best_epoch: int
+    control_best_epoch: int
+    augmented_best_validation_mse: float
+    control_best_validation_mse: float
+    augmented_invariance_passed: bool
+    control_invariance_passed: bool
+    plot_path: Path
+    results_path: Path
+
+
+def coordinate_variance_target(x: Tensor) -> Tensor:
+    """Compute the assignment's coordinate-wise variance using the 1/n divisor."""
+
+    if x.ndim != 3 or x.shape[1] < 1 or x.shape[2] < 1:
+        raise ValueError(
+            "Expected a batch with shape (examples, n, d), "
+            f"got {tuple(x.shape)}"
+        )
+    return x.var(dim=1, unbiased=False)
+
+
+def _sample_standard_rayleigh(
+    shape: tuple[int, ...],
+    *,
+    generator: torch.Generator,
+    dtype: torch.dtype = torch.float32,
+) -> Tensor:
+    """Sample Rayleigh(scale=1) values by inverse-transform sampling."""
+
+    uniform = torch.rand(shape, generator=generator, dtype=dtype)
+    epsilon = torch.finfo(dtype).eps
+    uniform = uniform.clamp(min=epsilon, max=1.0 - epsilon)
+    return torch.sqrt(-2.0 * torch.log(uniform))
+
+
+def generate_q3e_dataset(
+    *,
+    dataset_size: int = DEFAULT_DATASET_SIZE,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    seed: int = DEFAULT_SEED,
+) -> Q3EDataset:
+    """Generate independent Gaussian sets with per-example means and variances."""
+
+    if dataset_size < 1 or n < 1 or d < 1:
+        raise ValueError("dataset_size, n, and d must all be positive")
+
+    generator = torch.Generator().manual_seed(seed)
+    means = torch.randn(dataset_size, d, generator=generator)
+    variances = _sample_standard_rayleigh(
+        (dataset_size, d),
+        generator=generator,
+    )
+    standard_normal_noise = torch.randn(
+        dataset_size,
+        n,
+        d,
+        generator=generator,
+    )
+    inputs = (
+        means.unsqueeze(1)
+        + variances.sqrt().unsqueeze(1) * standard_normal_noise
+    )
+    targets = coordinate_variance_target(inputs)
+    return Q3EDataset(
+        inputs=inputs,
+        targets=targets,
+        means=means,
+        variances=variances,
+    )
+
+
+def draw_row_permutations(
+    batch_size: int,
+    n: int,
+    *,
+    generator: torch.Generator,
+) -> Tensor:
+    """Draw one independent uniform row permutation for every batch example."""
+
+    if batch_size < 1 or n < 1:
+        raise ValueError("batch_size and n must both be positive")
+    return torch.stack(
+        [torch.randperm(n, generator=generator) for _ in range(batch_size)]
+    )
+
+
+def apply_row_permutations(x: Tensor, permutation_indices: Tensor) -> Tensor:
+    """Apply a separately supplied row permutation to every set in a batch."""
+
+    if x.ndim != 3:
+        raise ValueError(f"Expected x with shape (batch, n, d), got {tuple(x.shape)}")
+    if permutation_indices.shape != x.shape[:2]:
+        raise ValueError(
+            "Expected permutation_indices with shape "
+            f"{tuple(x.shape[:2])}, got {tuple(permutation_indices.shape)}"
+        )
+
+    gather_indices = permutation_indices.unsqueeze(-1).expand(-1, -1, x.shape[2])
+    return torch.gather(x, dim=1, index=gather_indices)
+
+
+@torch.no_grad()
+def q3e_metrics(
+    model: nn.Module,
+    inputs: Tensor,
+    targets: Tensor,
+    permutation_indices: Tensor,
+) -> Q3EMetrics:
+    """Evaluate approximation and invariance on fixed examples/permutations."""
+
+    model.eval()
+    predictions = model(inputs)
+    permuted_inputs = apply_row_permutations(inputs, permutation_indices)
+    permuted_predictions = model(permuted_inputs)
+    prediction_difference = permuted_predictions - predictions
+
+    return Q3EMetrics(
+        approximation_mse=float(torch.mean((predictions - targets) ** 2).item()),
+        mean_l2_invariance_error=float(
+            torch.linalg.vector_norm(prediction_difference, dim=1).mean().item()
+        ),
+        max_absolute_invariance_error=float(
+            prediction_difference.abs().max().item()
+        ),
+    )
+
+
+@torch.no_grad()
+def _q3e_dataset_mse(
+    model: nn.Module,
+    inputs: Tensor,
+    targets: Tensor,
+) -> float:
+    model.eval()
+    return float(torch.mean((model(inputs) - targets) ** 2).item())
+
+
+def train_q3e_model(
+    model: TwoLayerMLP,
+    *,
+    training_inputs: Tensor,
+    training_targets: Tensor,
+    validation_inputs: Tensor,
+    validation_targets: Tensor,
+    augment: bool,
+    maximum_epochs: int,
+    training_order_seed: int,
+    augmentation_seed: int,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    learning_rate: float = DEFAULT_LEARNING_RATE,
+    patience: int = DEFAULT_EARLY_STOPPING_PATIENCE,
+) -> Q3ETrainingRun:
+    """Train one Q3(e) model with validation-based early stopping."""
+
+    if training_inputs.shape[0] != training_targets.shape[0]:
+        raise ValueError("Training inputs and targets must have equal lengths")
+    if validation_inputs.shape[0] != validation_targets.shape[0]:
+        raise ValueError("Validation inputs and targets must have equal lengths")
+    if maximum_epochs < 1:
+        raise ValueError("maximum_epochs must be positive")
+    if batch_size < 1 or learning_rate <= 0 or patience < 1:
+        raise ValueError("batch_size, learning_rate, and patience must be positive")
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    loss_function = nn.MSELoss()
+    training_order_generator = torch.Generator().manual_seed(training_order_seed)
+    augmentation_generator = torch.Generator().manual_seed(augmentation_seed)
+
+    training_losses: list[float] = []
+    validation_losses: list[float] = []
+    best_validation_mse = float("inf")
+    best_epoch = 0
+    best_state = copy.deepcopy(model.state_dict())
+    epochs_without_improvement = 0
+
+    for epoch_index in range(maximum_epochs):
+        epoch_order = torch.randperm(
+            training_inputs.shape[0],
+            generator=training_order_generator,
+        )
+        model.train()
+        total_squared_error = 0.0
+        total_coordinates = 0
+
+        for batch_start in range(0, len(epoch_order), batch_size):
+            batch_indices = epoch_order[batch_start : batch_start + batch_size]
+            batch_inputs = training_inputs[batch_indices]
+            batch_targets = training_targets[batch_indices]
+
+            if augment:
+                row_permutations = draw_row_permutations(
+                    batch_size=batch_inputs.shape[0],
+                    n=batch_inputs.shape[1],
+                    generator=augmentation_generator,
+                )
+                batch_inputs = apply_row_permutations(
+                    batch_inputs,
+                    row_permutations,
+                )
+
+            optimizer.zero_grad()
+            predictions = model(batch_inputs)
+            loss = loss_function(predictions, batch_targets)
+            loss.backward()
+            optimizer.step()
+
+            total_squared_error += float(
+                torch.sum((predictions.detach() - batch_targets) ** 2).item()
+            )
+            total_coordinates += batch_targets.numel()
+
+        training_mse = total_squared_error / total_coordinates
+        validation_mse = _q3e_dataset_mse(
+            model,
+            validation_inputs,
+            validation_targets,
+        )
+        training_losses.append(training_mse)
+        validation_losses.append(validation_mse)
+
+        if validation_mse < best_validation_mse:
+            best_validation_mse = validation_mse
+            best_epoch = epoch_index + 1
+            best_state = copy.deepcopy(model.state_dict())
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+        if epochs_without_improvement >= patience:
+            break
+
+    model.load_state_dict(best_state)
+    return Q3ETrainingRun(
+        model=model,
+        training_losses=training_losses,
+        validation_losses=validation_losses,
+        best_epoch=best_epoch,
+        best_validation_mse=best_validation_mse,
+    )
+
+
+def save_q3e_training_plot(
+    augmented_run: Q3ETrainingRun,
+    control_run: Q3ETrainingRun,
+    output_path: Path,
+) -> None:
+    """Save the approved two-panel training/validation MSE figure."""
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure, axes = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
+
+    for axis, title, run in (
+        (axes[0], "Permutation augmentation", augmented_run),
+        (axes[1], "No-augmentation control", control_run),
+    ):
+        epochs = range(1, len(run.training_losses) + 1)
+        axis.plot(epochs, run.training_losses, label="Training MSE")
+        axis.plot(epochs, run.validation_losses, label="Validation MSE")
+        axis.axvline(
+            run.best_epoch,
+            color="black",
+            linestyle="--",
+            linewidth=1,
+            label=f"Best epoch: {run.best_epoch}",
+        )
+        axis.set_title(title)
+        axis.set_xlabel("Epoch")
+        axis.set_yscale("log")
+        axis.grid(alpha=0.25)
+        axis.legend()
+
+    axes[0].set_ylabel("Mean squared error")
+    figure.suptitle("Question 3(e): training and validation loss")
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
+def _metrics_to_dict(metrics: Q3EMetrics) -> dict[str, float]:
+    return {
+        "approximation_mse": metrics.approximation_mse,
+        "mean_l2_invariance_error": metrics.mean_l2_invariance_error,
+        "max_absolute_invariance_error": metrics.max_absolute_invariance_error,
+    }
+
+
+def test_q3e_data_and_augmentation(
+    dataset: Q3EDataset,
+    *,
+    dataset_size: int = DEFAULT_DATASET_SIZE,
+    n: int = DEFAULT_N,
+    d: int = DEFAULT_D,
+    seed: int = DEFAULT_SEED,
+) -> bool:
+    """Check shapes, targets, per-example parameters, and row permutations."""
+
+    expected_input_shape = (dataset_size, n, d)
+    expected_parameter_shape = (dataset_size, d)
+    targets_match = torch.allclose(
+        dataset.targets,
+        coordinate_variance_target(dataset.inputs),
+        atol=0.0,
+        rtol=0.0,
+    )
+    parameters_vary = (
+        torch.unique(dataset.means, dim=0).shape[0] > 1
+        and torch.unique(dataset.variances, dim=0).shape[0] > 1
+    )
+
+    generator = torch.Generator().manual_seed(seed + 3000)
+    first_permutations = draw_row_permutations(
+        batch_size=32,
+        n=n,
+        generator=generator,
+    )
+    second_permutations = draw_row_permutations(
+        batch_size=32,
+        n=n,
+        generator=generator,
+    )
+    expected_indices = torch.arange(n).expand(32, -1)
+    permutations_valid = (
+        torch.equal(torch.sort(first_permutations, dim=1).values, expected_indices)
+        and torch.equal(
+            torch.sort(second_permutations, dim=1).values,
+            expected_indices,
+        )
+        and not torch.equal(first_permutations, second_permutations)
+    )
+    target_is_permutation_invariant = torch.equal(
+        coordinate_variance_target(
+            apply_row_permutations(dataset.inputs[:32], first_permutations)
+        ),
+        dataset.targets[:32],
+    )
+
+    return (
+        tuple(dataset.inputs.shape) == expected_input_shape
+        and tuple(dataset.targets.shape) == expected_parameter_shape
+        and tuple(dataset.means.shape) == expected_parameter_shape
+        and tuple(dataset.variances.shape) == expected_parameter_shape
+        and bool(torch.all(dataset.variances > 0))
+        and bool(torch.all(torch.isfinite(dataset.inputs)))
+        and bool(torch.all(torch.isfinite(dataset.targets)))
+        and targets_match
+        and parameters_vary
+        and permutations_valid
+        and target_is_permutation_invariant
+    )
+
+
+def run_q3e_experiment(
+    *,
+    output_dir: Optional[Path] = None,
+    dataset_size: int = DEFAULT_DATASET_SIZE,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    maximum_epochs: int = DEFAULT_MAX_EPOCHS,
+    patience: int = DEFAULT_EARLY_STOPPING_PATIENCE,
+    seed: int = DEFAULT_SEED,
+) -> tuple[Q3EExperimentResult, bool]:
+    """Run the approved augmented/control training comparison and save results."""
+
+    if dataset_size < 20 or dataset_size % 20 != 0:
+        raise ValueError(
+            "dataset_size must be a positive multiple of 20 for a 70/15/15 split"
+        )
+    training_size = 7 * dataset_size // 10
+    validation_size = 3 * dataset_size // 20
+    test_size = dataset_size - training_size - validation_size
+
+    if output_dir is None:
+        output_dir = (
+            Path(__file__).resolve().parent
+            / "_qa"
+            / "q3e"
+            / (
+                f"size-{dataset_size}-batch-{batch_size}"
+                f"-epochs-{maximum_epochs}-patience-{patience}"
+            )
+        )
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    dataset = generate_q3e_dataset(dataset_size=dataset_size, seed=seed)
+    data_checks_passed = test_q3e_data_and_augmentation(
+        dataset,
+        dataset_size=dataset_size,
+        seed=seed,
+    )
+
+    training_end = training_size
+    validation_end = training_end + validation_size
+    test_end = validation_end + test_size
+    if test_end != dataset_size:
+        raise RuntimeError("The Q3(e) split sizes do not cover the dataset")
+
+    training_inputs = dataset.inputs[:training_end]
+    training_targets = dataset.targets[:training_end]
+    validation_inputs = dataset.inputs[training_end:validation_end]
+    validation_targets = dataset.targets[training_end:validation_end]
+    test_inputs = dataset.inputs[validation_end:test_end]
+    test_targets = dataset.targets[validation_end:test_end]
+
+    torch.manual_seed(seed)
+    initial_model = TwoLayerMLP(
+        n=DEFAULT_N,
+        d=DEFAULT_D,
+        output_dim=DEFAULT_OUTPUT_DIM,
+        hidden_dim=DEFAULT_MLP_HIDDEN_DIM,
+    )
+    initial_state = copy.deepcopy(initial_model.state_dict())
+
+    evaluation_generator = torch.Generator().manual_seed(seed + 4000)
+    evaluation_permutations = draw_row_permutations(
+        batch_size=test_size,
+        n=DEFAULT_N,
+        generator=evaluation_generator,
+    )
+    initial_metrics = q3e_metrics(
+        initial_model,
+        test_inputs,
+        test_targets,
+        evaluation_permutations,
+    )
+
+    augmented_model = TwoLayerMLP(
+        n=DEFAULT_N,
+        d=DEFAULT_D,
+        output_dim=DEFAULT_OUTPUT_DIM,
+        hidden_dim=DEFAULT_MLP_HIDDEN_DIM,
+    )
+    augmented_model.load_state_dict(initial_state)
+    augmented_run = train_q3e_model(
+        augmented_model,
+        training_inputs=training_inputs,
+        training_targets=training_targets,
+        validation_inputs=validation_inputs,
+        validation_targets=validation_targets,
+        augment=True,
+        maximum_epochs=maximum_epochs,
+        training_order_seed=seed + 1000,
+        augmentation_seed=seed + 2000,
+        batch_size=batch_size,
+        patience=patience,
+    )
+
+    control_model = TwoLayerMLP(
+        n=DEFAULT_N,
+        d=DEFAULT_D,
+        output_dim=DEFAULT_OUTPUT_DIM,
+        hidden_dim=DEFAULT_MLP_HIDDEN_DIM,
+    )
+    control_model.load_state_dict(initial_state)
+    control_run = train_q3e_model(
+        control_model,
+        training_inputs=training_inputs,
+        training_targets=training_targets,
+        validation_inputs=validation_inputs,
+        validation_targets=validation_targets,
+        augment=False,
+        maximum_epochs=maximum_epochs,
+        training_order_seed=seed + 1000,
+        augmentation_seed=seed + 2000,
+        batch_size=batch_size,
+        patience=patience,
+    )
+
+    augmented_metrics = q3e_metrics(
+        augmented_run.model,
+        test_inputs,
+        test_targets,
+        evaluation_permutations,
+    )
+    control_metrics = q3e_metrics(
+        control_run.model,
+        test_inputs,
+        test_targets,
+        evaluation_permutations,
+    )
+    augmented_invariance_passed = (
+        augmented_metrics.max_absolute_invariance_error <= DEFAULT_Q3E_ATOL
+    )
+    control_invariance_passed = (
+        control_metrics.max_absolute_invariance_error <= DEFAULT_Q3E_ATOL
+    )
+
+    plot_path = output_dir / "q3e_training_curves.png"
+    results_path = output_dir / "q3e_results.json"
+    save_q3e_training_plot(augmented_run, control_run, plot_path)
+
+    result_payload = {
+        "configuration": {
+            "seed": seed,
+            "n": DEFAULT_N,
+            "d": DEFAULT_D,
+            "output_dim": DEFAULT_OUTPUT_DIM,
+            "hidden_dim": DEFAULT_MLP_HIDDEN_DIM,
+            "dataset_size": dataset_size,
+            "training_size": training_size,
+            "validation_size": validation_size,
+            "test_size": test_size,
+            "batch_size": batch_size,
+            "learning_rate": DEFAULT_LEARNING_RATE,
+            "maximum_epochs": maximum_epochs,
+            "early_stopping_patience": patience,
+            "maximum_error_tolerance": DEFAULT_Q3E_ATOL,
+            "loss": "MSELoss",
+            "optimizer": "Adam",
+            "mean_distribution": "Normal(0, 1)",
+            "variance_distribution": "Rayleigh(scale=1)",
+            "target_variance_divisor": "n",
+        },
+        "data_and_augmentation_checks_passed": data_checks_passed,
+        "initial_metrics": _metrics_to_dict(initial_metrics),
+        "augmented_model": {
+            "metrics": _metrics_to_dict(augmented_metrics),
+            "maximum_error_test_passed": augmented_invariance_passed,
+            "best_epoch": augmented_run.best_epoch,
+            "best_validation_mse": augmented_run.best_validation_mse,
+            "training_losses": augmented_run.training_losses,
+            "validation_losses": augmented_run.validation_losses,
+        },
+        "control_model": {
+            "metrics": _metrics_to_dict(control_metrics),
+            "maximum_error_test_passed": control_invariance_passed,
+            "best_epoch": control_run.best_epoch,
+            "best_validation_mse": control_run.best_validation_mse,
+            "training_losses": control_run.training_losses,
+            "validation_losses": control_run.validation_losses,
+        },
+    }
+    results_path.write_text(
+        json.dumps(result_payload, indent=2),
+        encoding="utf-8",
+    )
+
+    result = Q3EExperimentResult(
+        initial_metrics=initial_metrics,
+        augmented_metrics=augmented_metrics,
+        control_metrics=control_metrics,
+        augmented_best_epoch=augmented_run.best_epoch,
+        control_best_epoch=control_run.best_epoch,
+        augmented_best_validation_mse=augmented_run.best_validation_mse,
+        control_best_validation_mse=control_run.best_validation_mse,
+        augmented_invariance_passed=augmented_invariance_passed,
+        control_invariance_passed=control_invariance_passed,
+        plot_path=plot_path,
+        results_path=results_path,
+    )
+    return result, data_checks_passed
 
 
 def canonization_invariance_max_error(
@@ -941,6 +1547,65 @@ def run_q3d_tests() -> bool:
     )
 
 
+def run_q3e_tests() -> bool:
+    """Run the approved Q3(e) augmented/control training experiment."""
+
+    result, data_checks_passed = run_q3e_experiment()
+    metric_values = (
+        *_metrics_to_dict(result.initial_metrics).values(),
+        *_metrics_to_dict(result.augmented_metrics).values(),
+        *_metrics_to_dict(result.control_metrics).values(),
+        result.augmented_best_validation_mse,
+        result.control_best_validation_mse,
+    )
+    metrics_are_finite = bool(torch.all(torch.isfinite(torch.tensor(metric_values))))
+    output_files_exist = result.plot_path.is_file() and result.results_path.is_file()
+
+    print(
+        "Q3(e) data-generation and fresh-permutation checks:",
+        "PASS" if data_checks_passed else "FAIL",
+    )
+    print(
+        "Q3(e) augmented training:",
+        f"best_epoch={result.augmented_best_epoch}, "
+        f"best_validation_mse={result.augmented_best_validation_mse:.12g}, "
+        f"test_mse={result.augmented_metrics.approximation_mse:.12g}",
+    )
+    print(
+        "Q3(e) no-augmentation control:",
+        f"best_epoch={result.control_best_epoch}, "
+        f"best_validation_mse={result.control_best_validation_mse:.12g}, "
+        f"test_mse={result.control_metrics.approximation_mse:.12g}",
+    )
+    print(
+        "Q3(e) augmented mean-L2 invariance error:",
+        f"before={result.initial_metrics.mean_l2_invariance_error:.12g}, "
+        f"after={result.augmented_metrics.mean_l2_invariance_error:.12g}",
+    )
+    print(
+        "Q3(e) control mean-L2 invariance error:",
+        f"before={result.initial_metrics.mean_l2_invariance_error:.12g}, "
+        f"after={result.control_metrics.mean_l2_invariance_error:.12g}",
+    )
+    print(
+        "Q3(e) augmented maximum-coordinate invariance test:",
+        "PASS" if result.augmented_invariance_passed else "FAIL",
+        f"(atol={DEFAULT_Q3E_ATOL:g}, "
+        f"before={result.initial_metrics.max_absolute_invariance_error:.12g}, "
+        f"after={result.augmented_metrics.max_absolute_invariance_error:.12g})",
+    )
+    print(
+        "Q3(e) control maximum-coordinate invariance test:",
+        "PASS" if result.control_invariance_passed else "FAIL",
+        f"(atol={DEFAULT_Q3E_ATOL:g}, "
+        f"before={result.initial_metrics.max_absolute_invariance_error:.12g}, "
+        f"after={result.control_metrics.max_absolute_invariance_error:.12g})",
+    )
+    print("Q3(e) training curves:", result.plot_path)
+    print("Q3(e) full numerical results:", result.results_path)
+    return data_checks_passed and metrics_are_finite and output_files_exist
+
+
 def run_q3_tests() -> bool:
     """Run all implemented Question 3 checks."""
 
@@ -948,6 +1613,7 @@ def run_q3_tests() -> bool:
     q3b_passed = run_q3b_tests()
     q3c_passed = run_q3c_tests()
     q3d_passed = run_q3d_tests()
+    q3e_completed = run_q3e_tests()
     dimensions_passed = test_shared_output_dimension_configuration()
     print(
         "Q3 shared p=d=3 output-dimension test:",
@@ -958,6 +1624,7 @@ def run_q3_tests() -> bool:
         and q3b_passed
         and q3c_passed
         and q3d_passed
+        and q3e_completed
         and dimensions_passed
     )
 

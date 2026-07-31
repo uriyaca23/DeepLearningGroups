@@ -262,6 +262,10 @@
     {
       "sha256": "E0E9920F127B039828227E918CBC5712CB87B310D68290AB25422201C90595A0",
       "label": "Approved Q2(c) block-type parameter-sharing diagram"
+    },
+    {
+      "sha256": "49D0B9251E2AF14B075F06CAD5E25C787F4CCEE7FA25A712B53E97013089D209",
+      "label": "Approved Q3(e) training and validation loss graph"
     }
   ]
 }

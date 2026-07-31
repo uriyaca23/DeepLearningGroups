@@ -1,6 +1,6 @@
 # HW4 project state
 
-Last reconciled: 2026-07-30
+Last reconciled: 2026-07-31
 
 ## Objective
 
@@ -15,7 +15,7 @@ approved designs, and writes approved Hebrew answers.
 - `style/homework_style_contract.json`: machine-checkable Word/OOXML values.
 - `AGENTS.md`: mandatory entry point for future sessions.
 - `HW4.pdf`: authoritative assignment wording.
-- `q3_set_networks.py`: current approved Question 3(a-d) implementation.
+- `q3_set_networks.py`: current approved Question 3(a-e) implementation.
 
 Do not duplicate stable style rules here. Do not use or modify
 LocationPipeline.
@@ -37,13 +37,16 @@ remain unchanged.
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `EED29FB0BB6BFECBD1D2656D8CF10A4A38027419B958554262E93F555577A326`
-- Accepted scope: Question 1 through Question 3(d).
-- User visual approval: granted on 2026-07-30 for the unified
-  input/output-feature revision through Q3(d), including the updated
-  calculations and Word rendering.
-- Git checkpoint: the accepted revision is the repository `HEAD` on `main`.
-- Publication status: published to `origin/main` on 2026-07-30.
+  `F7F654E5CA53FFB74C628229BD95DEE2A21D697F0368DCBCA1D77261FB1EF2CB`
+- Accepted scope: Question 1 through Question 3(e).
+- User visual approval: granted on 2026-07-31 for the exact Q3(e) review
+  candidate, including the final graph, RTL text, and three-column results
+  table with the unnecessary `Initial` column removed.
+- Git checkpoint: this accepted revision is committed on `main`.
+- Publication status: published to `origin/main` on 2026-07-31.
+- The previous accepted Q1-Q3(d) checkpoint is archived as
+  `old/HW4-Solution.pre-q3e-20260731-214134.docx`, SHA-256
+  `EED29FB0BB6BFECBD1D2656D8CF10A4A38027419B958554262E93F555577A326`.
 - The previous accepted Q3(a-d) checkpoint is archived as
   `old/HW4-Solution.pre-output3-consistency-20260730-160856.docx`, SHA-256
   `7B8C1B62C049CB55DB4D146DB1796E1FAFAB954064430E4E509D948ACD6EF2A1`.
@@ -77,7 +80,7 @@ remain unchanged.
 | Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | published |
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q3(e) | not started | not started | not started | not started | not started | not started | not started |
+| Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 | not started | not started | not started | not started | not started | not started | not started |
 
 Semantic approval never implies DOCX-format approval.
@@ -245,6 +248,48 @@ to be re-derived unless the design changes.
 - After promotion, a fresh read-only Word export of `HW4-Solution.docx`
   matched the approved candidate pixel-for-pixel on all 13 pages.
 
+## Q3(e) approved technical checkpoint
+
+- Shared configuration: seed 2319, `n=7`, `d=p=3`, and the ordinary
+  order-sensitive flattened MLP `21 -> 32 -> 3` with 803 trainable
+  parameters.
+- Each example independently samples a mean vector from `Normal(0, 1)` and a
+  variance vector from `Rayleigh(scale=1)`, then samples seven Gaussian rows.
+  The target is the coordinate-wise empirical variance with divisor `n`.
+- The 1000 examples are split 700/150/150 into training, validation, and test
+  sets. The augmented run applies a freshly sampled uniform row permutation
+  whenever a training example is seen. The control uses the same initial
+  weights, data, and `batch order`, but no row permutations.
+- Both runs use `MSELoss`, Adam with learning rate `1e-4`, `batch size` 64,
+  at most 2000 epochs, early-stopping patience 100, and restoration of the
+  best validation checkpoint.
+- Augmented results: test MSE `0.082402`, mean invariance error `0.392815`,
+  and maximum coordinate difference `1.435731`.
+- Control results: test MSE `0.135498`, mean invariance error `0.645611`, and
+  maximum coordinate difference `1.362356`.
+- Augmentation improves both test MSE and mean invariance error by about 39%,
+  but neither model satisfies the strict worst-case absolute tolerance
+  `atol=1e-2`. This is consistent with data augmentation encouraging, but not
+  architecturally guaranteeing, invariance.
+- Q3(a-d) regression tests, the shared-dimension check, Q3(e) data and fresh
+  permutation checks, and the saved Q3(e) configuration/results checks all
+  pass on 2026-07-31.
+
+## Approved Q3(e) document addition
+
+- Q3(e) uses an accepted Heading 2 clone, concise Hebrew prose in the HW1-HW3
+  style, DejaVu Sans, and native RTL paragraph behavior.
+- The original English prompt is included as the source excerpt from
+  `HW4.pdf`. The answer includes the approved training/validation-loss graph
+  and an orderly Word-native results table with only `Metric`, `Augmented`,
+  and `Control` columns.
+- The graph SHA-256
+  `49D0B9251E2AF14B075F06CAD5E25C787F4CCEE7FA25A712B53E97013089D209`
+  is recorded as approved media in the mechanical style contract.
+- The user explicitly approved the exact review candidate on 2026-07-31.
+  The mechanical contract passed, Microsoft Word exported all 14 pages, and
+  every promoted page matched the approved render pixel-for-pixel.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -258,9 +303,10 @@ to be re-derived unless the design changes.
 
 ## Precise next action
 
-Continue collaboratively with Question 3(e): present its original English
+Continue collaboratively with Question 4: present its original English
 wording from `HW4.pdf`, give only brief orienting context, and ask for the
-student's reasoning. Challenge mistakes with progressively stronger hints and
-formalize only the answer the student understands and approves. Do not
-implement or write the Q3(e) answer into the DOCX before its design and formal
-Hebrew answer pass the normal explicit approval gates.
+student's reasoning one focused question at a time. Challenge mistakes with
+progressively stronger hints and formalize only the answer the student
+understands and approves. Do not implement or write the Q4 answer into the
+DOCX before its design and formal Hebrew answer pass the normal explicit
+approval gates.
