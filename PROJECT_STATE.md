@@ -71,7 +71,8 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
-| Q4 bonuses | not started | not started | not started | not started | not started | not started | not published |
+| Q4 normals bonus | approved design; result interpretation in progress | not started | 15 d=6 runs pass | not started | not started | not started | not published |
+| Q4 rotation bonus | not started | not started | not started | not started | not started | not started | not published |
 
 Semantic approval never implies DOCX-format approval.
 
@@ -298,6 +299,42 @@ All 15 runs completed normally; none reached the 30-minute cap.
   plot, accuracy plot, five learning-curve figures, per-run JSON/checkpoints,
   consolidated results JSON, and runtime CSV.
 
+## Q4 surface-normal bonus checkpoint
+
+The student approved the complete experimental design on 2026-08-01. Every
+point is represented by `(x, y, z, nx, ny, nz)`; positions and their attached
+normals are always permuted together. Canonization sorts by XYZ only and carries
+the complete six-feature row. The archive contains no duplicated XYZ rows among
+the 4,468 cached clouds, so this sorting rule is unambiguous on the experiment
+data.
+
+All mandatory hyperparameters, splits, seeds, point counts, hidden widths, and
+stopping rules are unchanged. This is intentionally not parameter-matched:
+
+- Canonization and augmentation use `1536 -> 64 -> 64 -> 40`, 105,128
+  parameters.
+- Full and sampled symmetrization use `42 -> 207 -> 207 -> 40`, 60,277
+  parameters.
+- The equivariant network uses `6 -> 128 -> 128`, mean pooling, and
+  `128 -> 128 -> 40`, 56,232 parameters.
+
+Both the unchanged d=3 mode and the new d=6 mode pass CUDA smoke tests. All 15
+d=6 runs completed normally on the RTX 3080, and a checkpoint-only reevaluation
+reproduced the saved test metrics. Raw overall-accuracy results are:
+
+| Architecture | d=6 at 5 | d=6 at 10 | d=6 at 50 | Delta from d=3 at 5/10/50 |
+|---|---:|---:|---:|---:|
+| Canonization | 19.69% | 22.85% | 35.01% | +5.71 / +1.58 / +1.74 pp |
+| Full symmetrization | 3.40% | 3.85% | 38.13% | -7.58 / -19.57 / -3.85 pp |
+| Sampled symmetrization | 3.77% | 3.77% | 38.01% | -6.77 / -20.46 / -3.97 pp |
+| Equivariant network | 21.07% | 33.87% | 68.64% | +7.09 / +6.16 / +10.33 pp |
+| Permutation augmentation | 2.31% | 4.38% | 25.69% | +0.20 / -0.73 / +1.01 pp |
+
+The raw experiment is complete, but the student's interpretation, formal Hebrew
+answer, DOCX insertion, and visual approval are still pending. Generated caches,
+checkpoints, plots, and result tables are isolated under ignored
+`_qa/q4_modelnet40_normals/`.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -311,8 +348,8 @@ All 15 runs completed normally; none reached the 30-minute cap.
 
 ## Precise next action
 
-Continue the collaborative workflow with the first Q4 bonus: present its
-original English wording, give brief orientation only, and ask the student one
-focused question about how surface normals should change the input and the
-controlled comparison. Do not implement or insert the bonus before the normal
-reasoning, formal-answer, and approval gates pass.
+Continue the collaborative interpretation of the Q4 surface-normal results.
+Ask the student one focused question about why normals strongly improved the
+equivariant network but did not uniformly help the seven-point symmetrization
+models, especially in the 5- and 10-example regimes. Challenge confounding
+claims, then formalize only after the interpretation is correct and approved.

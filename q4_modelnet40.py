@@ -1,8 +1,8 @@
 """HW4 Question 4 ModelNet40 benchmark.
 
-This module implements the mandatory, user-approved comparison of five
-permutation-invariant approaches. It deliberately reuses the Question 3 model
-components so the parameter counts and symmetry mechanisms remain aligned.
+This module implements the mandatory comparison of five permutation-invariant
+approaches and the approved surface-normal bonus rerun. It deliberately reuses
+the Question 3 model components so the symmetry mechanisms remain aligned.
 
 The large ModelNet40 archive and all generated experiment artifacts live under
 the ignored ``_qa`` directory. Neural-network execution is CUDA-only and never
@@ -48,7 +48,10 @@ from matplotlib import pyplot as plt
 
 SEED = 2319
 CLASS_COUNT = 40
-FEATURE_DIM = 3
+POSITION_DIM = 3
+MANDATORY_FEATURE_DIM = 3
+NORMAL_FEATURE_DIM = 6
+FEATURE_DIM = MANDATORY_FEATURE_DIM
 SCALABLE_POINT_COUNT = 256
 SYMMETRIZATION_POINT_COUNT = 7
 SELECTED_SIZES = (5, 10, 50)
@@ -95,13 +98,54 @@ ARCHITECTURE_POINT_COUNTS = {
     "equivariant": SCALABLE_POINT_COUNT,
     "augmentation": SCALABLE_POINT_COUNT,
 }
-EXPECTED_PARAMETER_COUNTS = {
-    "canonization": 55_976,
-    "full_symmetrization": 55_930,
-    "sampled_symmetrization": 55_930,
-    "equivariant": 55_464,
-    "augmentation": 55_976,
-}
+
+
+def _mlp_parameter_count(
+    input_dim: int, hidden_dims: Sequence[int], output_dim: int
+) -> int:
+    widths = (input_dim, *hidden_dims, output_dim)
+    return sum(
+        input_width * output_width + output_width
+        for input_width, output_width in zip(widths, widths[1:])
+    )
+
+
+def _expected_parameter_counts(feature_dim: int) -> dict[str, int]:
+    flattened = _mlp_parameter_count(
+        SCALABLE_POINT_COUNT * feature_dim, (64, 64), CLASS_COUNT
+    )
+    symmetrized = _mlp_parameter_count(
+        SYMMETRIZATION_POINT_COUNT * feature_dim,
+        (207, 207),
+        CLASS_COUNT,
+    )
+    equivariant = (
+        2 * feature_dim * 128
+        + 128
+        + 2 * 128 * 128
+        + 128
+        + _mlp_parameter_count(128, (128,), CLASS_COUNT)
+    )
+    return {
+        "canonization": flattened,
+        "full_symmetrization": symmetrized,
+        "sampled_symmetrization": symmetrized,
+        "equivariant": equivariant,
+        "augmentation": flattened,
+    }
+
+
+EXPECTED_PARAMETER_COUNTS = _expected_parameter_counts(FEATURE_DIM)
+
+
+def configure_feature_dimension(feature_dim: int) -> None:
+    """Select the approved XYZ-only or XYZ-plus-normal experiment mode."""
+
+    if feature_dim not in {MANDATORY_FEATURE_DIM, NORMAL_FEATURE_DIM}:
+        raise ValueError(f"Unsupported feature dimension: {feature_dim}")
+    global FEATURE_DIM, EXPECTED_PARAMETER_COUNTS
+    FEATURE_DIM = feature_dim
+    EXPECTED_PARAMETER_COUNTS = _expected_parameter_counts(feature_dim)
 
 
 @dataclass(frozen=True)
@@ -221,24 +265,24 @@ def _point_member_map(names: Iterable[str]) -> dict[str, str]:
     return mapping
 
 
-def _read_xyz256(archive: ZipFile, member: str) -> np.ndarray:
+def _read_point_features256(archive: ZipFile, member: str) -> np.ndarray:
     with archive.open(member) as binary_stream:
         text_stream = io.TextIOWrapper(binary_stream, encoding="utf-8")
-        coordinates = np.loadtxt(
+        point_features = np.loadtxt(
             text_stream,
             delimiter=",",
             dtype=np.float32,
             max_rows=SCALABLE_POINT_COUNT,
-            usecols=(0, 1, 2),
+            usecols=tuple(range(FEATURE_DIM)),
         )
-    if coordinates.shape != (SCALABLE_POINT_COUNT, FEATURE_DIM):
+    if point_features.shape != (SCALABLE_POINT_COUNT, FEATURE_DIM):
         raise RuntimeError(
-            f"Expected {(SCALABLE_POINT_COUNT, FEATURE_DIM)} coordinates in "
-            f"{member}, got {coordinates.shape}"
+            f"Expected {(SCALABLE_POINT_COUNT, FEATURE_DIM)} point features in "
+            f"{member}, got {point_features.shape}"
         )
-    if not np.isfinite(coordinates).all():
-        raise RuntimeError(f"Non-finite coordinate found in {member}")
-    return coordinates
+    if not np.isfinite(point_features).all():
+        raise RuntimeError(f"Non-finite point feature found in {member}")
+    return point_features
 
 
 def prepare_compact_dataset(
@@ -250,7 +294,9 @@ def prepare_compact_dataset(
     """Cache only the approved training subset and complete official test set."""
 
     if cache_path.is_file() and not force:
-        return torch.load(cache_path, map_location="cpu", weights_only=False)
+        cached = torch.load(cache_path, map_location="cpu", weights_only=False)
+        validate_compact_dataset(cached)
+        return cached
     if not archive_path.is_file():
         raise FileNotFoundError(f"ModelNet40 archive not found: {archive_path}")
 
@@ -306,17 +352,25 @@ def prepare_compact_dataset(
 
         arrays: list[np.ndarray] = []
         for index, shape_id in enumerate(required_ids, start=1):
-            arrays.append(_read_xyz256(archive, member_by_shape[shape_id]))
+            arrays.append(
+                _read_point_features256(archive, member_by_shape[shape_id])
+            )
             if index % 250 == 0 or index == len(required_ids):
                 print(f"Prepared {index}/{len(required_ids)} point clouds")
 
     all_points = torch.from_numpy(np.stack(arrays)).contiguous()
     training_count = len(selected_training_ids)
     payload: dict[str, Any] = {
-        "format_version": 1,
+        "format_version": 2,
         "source_url": MODELNET40_URL,
         "source_archive_sha256": source_sha256,
         "seed": SEED,
+        "feature_dimension": FEATURE_DIM,
+        "feature_columns": (
+            ["x", "y", "z"]
+            if FEATURE_DIM == MANDATORY_FEATURE_DIM
+            else ["x", "y", "z", "nx", "ny", "nz"]
+        ),
         "class_names": class_names,
         "training_ids": selected_training_ids,
         "training_points": all_points[:training_count],
@@ -354,6 +408,14 @@ def validate_compact_dataset(dataset: dict[str, Any]) -> None:
     training_labels = dataset["training_labels"]
     test_points = dataset["test_points"]
     test_labels = dataset["test_labels"]
+    recorded_feature_dim = dataset.get(
+        "feature_dimension", int(training_points.shape[-1])
+    )
+    if recorded_feature_dim != FEATURE_DIM:
+        raise RuntimeError(
+            f"Cache contains d={recorded_feature_dim}, but the active mode "
+            f"requires d={FEATURE_DIM}"
+        )
     if len(class_names) != CLASS_COUNT:
         raise RuntimeError("Compact dataset does not contain 40 classes")
     expected_training = CLASS_COUNT * MAX_SELECTED_PER_CLASS
@@ -375,7 +437,7 @@ def validate_compact_dataset(dataset: dict[str, Any]) -> None:
     if not torch.equal(training_labels, expected_labels):
         raise RuntimeError("Cached training examples are not class-grouped and balanced")
     if not (torch.isfinite(training_points).all() and torch.isfinite(test_points).all()):
-        raise RuntimeError("Compact dataset contains non-finite coordinates")
+        raise RuntimeError("Compact dataset contains non-finite point features")
 
 
 def make_split(selected_per_class: int) -> DatasetSplit:
@@ -434,17 +496,77 @@ def validate_nested_splits(dataset: dict[str, Any]) -> None:
             raise RuntimeError("Validation splits are not nested")
 
 
+def _lexicographic_sort_by_position(features: Tensor) -> Tensor:
+    """Sort rows by XYZ while carrying every attached feature with its point."""
+
+    if (
+        features.ndim < 2
+        or features.shape[-2] < 1
+        or features.shape[-1] < POSITION_DIM
+    ):
+        raise ValueError(
+            f"Expected shape (..., n, d) with d >= {POSITION_DIM}, got "
+            f"{tuple(features.shape)}"
+        )
+    point_count, feature_dim = features.shape[-2:]
+    batch_shape = features.shape[:-2]
+    indices = torch.arange(point_count, device=features.device).expand(
+        *batch_shape, point_count
+    )
+    for feature in range(POSITION_DIM - 1, -1, -1):
+        values = features[..., feature]
+        ordered_values = torch.gather(values, -1, indices)
+        order = torch.argsort(ordered_values, dim=-1, stable=True)
+        indices = torch.gather(indices, -1, order)
+    gather_indices = indices.unsqueeze(-1).expand(
+        *batch_shape, point_count, feature_dim
+    )
+    return torch.gather(features, -2, gather_indices)
+
+
+class PositionCanonizationInvariantMLP(nn.Module):
+    """XYZ canonization that keeps normals attached to their spatial points."""
+
+    def __init__(
+        self,
+        n: int,
+        d: int,
+        output_dim: int,
+        hidden_dims: Sequence[int],
+    ) -> None:
+        super().__init__()
+        self.n = n
+        self.d = d
+        self.mlp = FlattenedMLP(n, d, output_dim, hidden_dims)
+
+    def forward(self, features: Tensor) -> Tensor:
+        if features.ndim < 2 or tuple(features.shape[-2:]) != (self.n, self.d):
+            raise ValueError(
+                f"Expected shape (..., {self.n}, {self.d}), got "
+                f"{tuple(features.shape)}"
+            )
+        return self.mlp(_lexicographic_sort_by_position(features))
+
+
 def build_model(architecture: str, *, seed: int = SEED) -> nn.Module:
     if architecture not in ARCHITECTURES:
         raise ValueError(f"Unknown architecture: {architecture}")
     _seed_all(seed)
     if architecture == "canonization":
-        model: nn.Module = CanonizationInvariantMLP(
-            n=SCALABLE_POINT_COUNT,
-            d=FEATURE_DIM,
-            output_dim=CLASS_COUNT,
-            hidden_dims=(64, 64),
-        )
+        if FEATURE_DIM == MANDATORY_FEATURE_DIM:
+            model: nn.Module = CanonizationInvariantMLP(
+                n=SCALABLE_POINT_COUNT,
+                d=FEATURE_DIM,
+                output_dim=CLASS_COUNT,
+                hidden_dims=(64, 64),
+            )
+        else:
+            model = PositionCanonizationInvariantMLP(
+                n=SCALABLE_POINT_COUNT,
+                d=FEATURE_DIM,
+                output_dim=CLASS_COUNT,
+                hidden_dims=(64, 64),
+            )
     elif architecture == "full_symmetrization":
         base = FlattenedMLP(
             SYMMETRIZATION_POINT_COUNT,
@@ -804,6 +926,8 @@ def run_experiment(
         "test_examples": int(dataset["test_labels"].shape[0]),
         "point_count": ARCHITECTURE_POINT_COUNTS[architecture],
         "feature_dimension": FEATURE_DIM,
+        "uses_surface_normals": FEATURE_DIM == NORMAL_FEATURE_DIM,
+        "canonization_sort_features": ["x", "y", "z"],
         "class_count": CLASS_COUNT,
         "parameter_count": parameter_count(model),
         "seed": SEED,
@@ -1025,6 +1149,8 @@ def summarize_results(output_dir: Path) -> list[dict[str, Any]]:
             "source_url": MODELNET40_URL,
             "source_archive_sha256": EXPECTED_ARCHIVE_SHA256,
             "seed": SEED,
+            "feature_dimension": FEATURE_DIM,
+            "uses_surface_normals": FEATURE_DIM == NORMAL_FEATURE_DIM,
             "selected_sizes": list(SELECTED_SIZES),
             "results": results,
         },
@@ -1073,6 +1199,25 @@ def run_smoke_tests(dataset: dict[str, Any]) -> None:
     validate_nested_splits(dataset)
     sample_points = dataset["training_points"][:4].to(device)
     sample_labels = dataset["training_labels"][:4].to(device)
+
+    if FEATURE_DIM == NORMAL_FEATURE_DIM:
+        normals = sample_points[..., POSITION_DIM:]
+        if torch.unique(normals.reshape(-1, POSITION_DIM), dim=0).shape[0] <= 1:
+            raise RuntimeError("Surface normals are unexpectedly identical")
+        synthetic = torch.tensor(
+            [
+                [2.0, 0.0, 0.0, 20.0, 21.0, 22.0],
+                [0.0, 0.0, 0.0, 10.0, 11.0, 12.0],
+                [1.0, 0.0, 0.0, 30.0, 31.0, 32.0],
+            ],
+            device=device,
+        )
+        sorted_synthetic = _lexicographic_sort_by_position(synthetic)
+        expected_normal_ids = torch.tensor([10.0, 30.0, 20.0], device=device)
+        if not torch.equal(
+            sorted_synthetic[:, POSITION_DIM], expected_normal_ids
+        ):
+            raise RuntimeError("XYZ canonization detached normals from points")
 
     sampled_a = build_model("sampled_symmetrization")
     sampled_b = build_model("sampled_symmetrization")
@@ -1171,12 +1316,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cache",
         type=Path,
-        default=Path("_qa/q4_modelnet40/modelnet40_xyz256.pt"),
+        default=None,
     )
     parser.add_argument(
-        "--output-dir", type=Path, default=Path("_qa/q4_modelnet40")
+        "--output-dir", type=Path, default=None
     )
     parser.add_argument("--download", action="store_true")
+    parser.add_argument(
+        "--use-normals",
+        action="store_true",
+        help=(
+            "Use XYZ plus the attached surface normal as six input features. "
+            "Use a separate cache and output directory for this mode."
+        ),
+    )
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
         "--architectures", nargs="+", choices=ARCHITECTURES, default=ARCHITECTURES
@@ -1194,6 +1347,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    configure_feature_dimension(
+        NORMAL_FEATURE_DIM if args.use_normals else MANDATORY_FEATURE_DIM
+    )
+    if args.output_dir is None:
+        args.output_dir = Path(
+            "_qa/q4_modelnet40_normals"
+            if args.use_normals
+            else "_qa/q4_modelnet40"
+        )
+    if args.cache is None:
+        args.cache = args.output_dir / (
+            "modelnet40_xyz_normals256.pt"
+            if args.use_normals
+            else "modelnet40_xyz256.pt"
+        )
     if args.download:
         download_modelnet40(args.archive)
     dataset = prepare_compact_dataset(
