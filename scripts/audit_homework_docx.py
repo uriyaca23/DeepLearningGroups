@@ -428,7 +428,12 @@ class Auditor:
                         prompt_indices.add(candidate.index)
                         self.check_prompt_paragraph(paragraph.text, candidate)
 
-            if subsection_pattern.match(paragraph.text):
+            # A populated Word TOC repeats Heading 2 text in TOC2 paragraphs.
+            # Those navigation entries are field results, not semantic body
+            # headings, so they must not be required to use Heading2.
+            if subsection_pattern.match(paragraph.text) and not paragraph.style_id.startswith(
+                "TOC"
+            ):
                 if paragraph.style_id != rules["subsection_style_id"]:
                     self.error(
                         f"Paragraph {paragraph.index + 1} {paragraph.text[:80]!r} "

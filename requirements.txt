@@ -1,5 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://download.pytorch.org/whl/cu126
 
 numpy==2.5.1
-torch==2.13.0+cpu
+torch==2.13.0+cu126
 matplotlib==3.11.1

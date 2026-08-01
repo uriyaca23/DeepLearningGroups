@@ -1,24 +1,27 @@
 # HW4 project state
 
-Last reconciled: 2026-07-31
+Last reconciled: 2026-08-01
 
 ## Objective
 
 Complete HW4 collaboratively as a learning exercise. The student's reasoning
-must lead each answer; Codex challenges, hints, formalizes, implements only
-approved designs, and writes approved Hebrew answers.
+must lead each answer; Codex challenges, gives progressively stronger hints,
+formalizes approved reasoning, implements only approved designs, and writes
+approved final answers in polished Hebrew.
 
 ## Governing files
 
-- `HOMEWORK_STYLE_GUIDE.md`: authoritative constant collaboration, writing,
+- `HOMEWORK_STYLE_GUIDE.md`: authoritative stable collaboration, writing,
   Word, RTL, and verification rules.
-- `style/homework_style_contract.json`: machine-checkable Word/OOXML values.
+- `style/homework_style_contract.json`: machine-checkable Word/OOXML values
+  and the exact approved media exceptions.
 - `AGENTS.md`: mandatory entry point for future sessions.
 - `HW4.pdf`: authoritative assignment wording.
-- `q3_set_networks.py`: current approved Question 3(a-e) implementation.
+- `q3_set_networks.py`: approved Question 3(a-e) implementation and recorded
+  experiments.
 
-Do not duplicate stable style rules here. Do not use or modify
-LocationPipeline.
+Do not duplicate stable style rules here. Never use, inspect, or modify
+LocationPipeline for this project.
 
 ## Preserved Q1-Q2 visual baseline
 
@@ -26,287 +29,176 @@ LocationPipeline.
 - SHA-256:
   `6197D53B5522953BDFEF486372541E9AB082FBF259471BED34AE11891EEE4AE2`
 - Accepted scope: Question 1 through Question 2(e), including the corrected
-  Q2(c) visual and the approved Q2(e) conclusion: the linear layer has eight
-  free parameters; if "layer" means an affine layer, the invariant bias adds
-  one, for nine parameters in total.
+  Q2(c) block-type visual and the approved Q2(e) conclusion: the linear layer
+  has eight free parameters; an invariant bias adds one parameter if "layer"
+  means an affine layer.
 
-This remains the immutable recovery baseline through Question 2(e). It must
-remain unchanged.
+This remains the immutable recovery baseline through Question 2(e).
 
 ## Current accepted checkpoint
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `F7F654E5CA53FFB74C628229BD95DEE2A21D697F0368DCBCA1D77261FB1EF2CB`
-- Accepted scope: Question 1 through Question 3(e).
-- User visual approval: granted on 2026-07-31 for the exact Q3(e) review
-  candidate, including the final graph, RTL text, and three-column results
-  table with the unnecessary `Initial` column removed.
-- Git checkpoint: this accepted revision is committed on `main`.
-- Publication status: published to `origin/main` on 2026-07-31.
-- The previous accepted Q1-Q3(d) checkpoint is archived as
-  `old/HW4-Solution.pre-q3e-20260731-214134.docx`, SHA-256
-  `EED29FB0BB6BFECBD1D2656D8CF10A4A38027419B958554262E93F555577A326`.
-- The previous accepted Q3(a-d) checkpoint is archived as
-  `old/HW4-Solution.pre-output3-consistency-20260730-160856.docx`, SHA-256
-  `7B8C1B62C049CB55DB4D146DB1796E1FAFAB954064430E4E509D948ACD6EF2A1`.
-- The accepted Q3(a-c) predecessor is archived as
-  `old/HW4-Solution.pre-q3d-review-20260727-184452.docx`, SHA-256
-  `61A32D4B2B95821F273C5677669F76D80838B1D14D8B302238141589CCE54856`.
-- The accepted mixed-`n` Q3(c) predecessor is archived as
-  `old/HW4-Solution.pre-q3-n7-revision-20260727-182303.docx`, SHA-256
-  `E9C60FDFDD073A9414850646BFBE33F87C6CFA2252BAB2BE71F8B712D7711CE1`.
-- The accepted Q3(b) predecessor is archived as
-  `old/HW4-Solution.pre-q3c-review-20260727-173243.docx`, SHA-256
-  `0D2F314D00BE2668A5EE1C13867D2F026B26E290EA91535DBAA01717EA853916`.
-- Accepted Q3(a) predecessor archived as
-  `old/HW4-Solution.pre-q3b-20260725-150335.docx`, SHA-256
-  `29691CF9182C9FE438FDDC78EDC73217E8E95A0B1B80E78BEAB2115C952D85A5`.
-- The earlier rejected Q3(a) checkpoint remains archived as
-  `old/HW4-Solution.rejected-q3a-20260725-125359.docx`, SHA-256
-  `5BB090D5A6504D45716B5E764F75725B32750515E5760AFA9C192461826EA42C`.
+  `7D382D3C8A0069BAF66506CCB45CFE3941AEE19F01C7EC1E64ED1AA2AE2DE39F`
+- Accepted scope: Question 1 through Question 3(e), including the complete
+  Q3/Q4-aligned rewrite and expanded Heading 1-2 table of contents.
+- User visual approval: granted on 2026-08-01 for the exact 18-page Word
+  review candidate.
+- Verification: the contract audit passed; two independent read-only Word
+  exports were pixel-identical on all 18 pages; every page was visually
+  inspected; the promoted file is byte-identical to the approved candidate.
+- Publication status: published to `origin/main` on 2026-08-01.
+- Previous accepted checkpoint archived as
+  `old/HW4-Solution.pre-q3-aligned-20260801-131231.docx`, SHA-256
+  `F7F654E5CA53FFB74C628229BD95DEE2A21D697F0368DCBCA1D77261FB1EF2CB`.
 
 ## Gate record
 
 | Part | Reasoning | Formal text | Code/tests | DOCX insertion | Mechanical audit | User visual approval | Publication |
 |---|---|---|---|---|---|---|---|
-| Q1 | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q2(a) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q2(b) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q2(c) | approved | approved | n/a | accepted baseline; only required block-type visual retained | baseline passes | approved | published |
-| Q2(d) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q2(e) | approved | approved | n/a | accepted baseline | baseline passes | approved | published |
-| Q3(a) | approved | approved | passed with unified `n=7` configuration | approved, revised, and promoted | passes | approved | published |
-| Q3(b) | approved | approved | passed with exact `7!` symmetrization | approved, revised, and promoted | passes | approved | published |
+| Q1 | approved | approved | n/a | accepted baseline | passes | approved | published |
+| Q2(a-e) | approved | approved | n/a | accepted baseline | passes | approved | published |
+| Q3(a) | approved | approved | passed | approved and promoted | passes | approved | published |
+| Q3(b) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q4 | not started | not started | not started | not started | not started | not started | not started |
+| Q4 | in progress | not started | not started | not started | not started | not started | not started |
 
 Semantic approval never implies DOCX-format approval.
 
-## Q3(a-c) approved technical checkpoint
+## Current Q3/Q4-aligned design
 
-- Shared experimental configuration: seed 2319, `n=7`, `d=3`, `p=3`, and
-  hidden width 32.
-- Q3(a-b) use `atol=1e-5` and `rtol=0`; Q3(c) uses the separately approved
-  pure maximum-coordinate absolute tolerance `1e-2`.
-- Q3(a): canonize rows lexicographically, flatten the canonical matrix, and
-  apply a two-layer MLP with one ReLU.
-- Q3(b): apply the same ordinary order-sensitive two-layer MLP to every one of
-  the `7! = 5040` row permutations and average the resulting output vectors.
-- Implementation: `q3_set_networks.py`.
-- Recorded Q3(a) results: required invariance test passes; the
-  partial-tie/duplicate-row test and an exhaustive check over all 5040 row
-  permutations also pass. The maximum absolute error is zero.
-- Recorded Q3(b) results: required invariance test passes; the ordinary base
-  MLP is non-invariant on the test input, while the averaged model has maximum
-  absolute permutation error `2.98023223877e-08`. The structural check confirms
-  all 5040 elements of `S_7` occur exactly once, and the finite-gradient check
-  also passes.
-- Q3(c): sample one fixed subset of `B=2700` distinct permutations uniformly
-  without replacement from `S_7`, and reuse that same subset for both compared
-  inputs.
-- The finite-population Monte Carlo calculation uses `N=7!=5040` and the
-  calibrated 95th-percentile coefficient `0.7618`. Solving the resulting
-  absolute-error estimate for tolerance `10^-2` gives `B >= 2697.7`; the
-  approved rounded choice is `B=2700`, or about 53.6% of the full group and a
-  1.87-fold computation reduction.
-- Recorded Q3(c) results: the pure maximum-coordinate absolute test passes
-  with error `0.00395260751247 < 10^-2`. Structural tests also confirm that
-  the subset contains 2700 unique permutations, remains fixed between forward
-  passes, and is reproduced by seed 2319.
+The following values supersede all earlier Q3 technical configurations.
 
-These technical results may be reused in later comparisons; they do not need
-to be re-derived unless the design changes.
+### Common rationale
 
-## Resolved Q3(a) format repair
+- Seed: 2319.
+- All neural-network experiments require the CUDA GPU; the target machine is
+  the user's RTX 3080.
+- Architectures were selected with the PointNet task in Q4 in mind, while
+  keeping comparisons within each Q3 subsection as close as the mathematical
+  requirements allow.
+- Q3(a-d) use output dimension 40 to match the Q4 classification target. Q3(e)
+  alone uses output dimension 3 because it predicts the three coordinate-wise
+  empirical variances.
+- The approximate-invariance metric in Q3(c) is the mean output-space RMS
+  error and uses the approved threshold `atol=1e-2`; maximum error is only a
+  supplementary diagnostic.
 
-- The complete original English prompt is now preserved as two readable,
-  high-resolution excerpts from the two source pages of `HW4.pdf`.
-- The rejected `Original Question` style is absent.
-- Question and subsection titles use the accepted Heading 1 and Heading 2
-  structures.
-- Hebrew prose inherits the accepted Word-native RTL paragraph behavior. The
-  seven direct `right` alignment overrides that Word rendered on the physical
-  left were removed; short lines now terminate at the physical right edge.
-- Display equations remain centered LTR Word equations.
-- The contract audit passes, and two independent Microsoft Word exports were
-  pixel-identical on all eleven pages.
-- The promoted main file was rendered again after promotion and matched the
-  visually approved candidate on all eleven pages.
+### Q3(a): canonicalization
 
-## Approved Q3(b) document addition
-
-- Q3(a-b) now use the user-approved common value `n=7`. The flattened MLP
-  input dimension is therefore 21, while the explicitly approved hidden width
-  remains 32 and the output dimension is 3.
-- Q3(b) uses an accepted Heading 2 clone, concise Hebrew prose in the
-  HW1-HW3 style, and three centered Word-native equations. No answer figure
-  was added.
-- All new Hebrew paragraphs inherit the accepted native RTL behavior and
-  DejaVu Sans body style; no direct `right` alignment override was introduced.
-- The mechanical contract passes. Microsoft Word updated the TOC, saved,
-  closed, and reopened the candidate successfully.
-- Live Word inspection confirmed the accepted RTL reading order and alignment.
-  Two independent Word exports were pixel-identical on all twelve pages.
-- Pages 1-10 remained pixel-identical to the prior accepted checkpoint. The
-  user visually approved the changed full-page renders of pages 11 and 12.
-- After promotion, a fresh read-only Word export of `HW4-Solution.docx`
-  matched the approved candidate pixel-for-pixel on all twelve pages.
-
-## Approved Q3(c) document addition
-
-- Q3(c) uses an accepted Heading 2 clone, concise Hebrew prose in the
-  HW1-HW3 style, and Word-native displayed equations. No answer figure was
-  added.
-- The answer explains why a fixed proper subset is generally only
-  approximately invariant, derives the finite-population Monte Carlo estimate,
-  records how it led to `B=2700`, and reports the approved implementation and
-  absolute-error test.
-- All new Hebrew prose and the heading use the accepted native RTL behavior
-  and DejaVu Sans styles; displayed equations remain centered LTR Word
-  equations.
-- The mechanical contract passes. Microsoft Word saved, closed, reopened, and
-  exported the 13-page candidate. The changed pages were inspected at full
-  page, including a high-resolution check of the page-13 header.
-- The user explicitly approved the exact Word review candidate on 2026-07-27.
-  After promotion, a fresh read-only Word export of `HW4-Solution.docx`
-  matched the approved candidate pixel-for-pixel on all thirteen pages.
-
-## Approved Q3(a-c) `n=7` unification revision
-
-- At the user's request, Q3(a) and Q3(b) were revised from `n=5` to `n=7`;
-  Q3(c) already used `n=7`.
-- Q3(b) now records the domain `R^(7x3)`, flattened dimension 21, exact
-  averaging over `7! = 5040` permutations, the proof over `S_7`, and the new
-  measured maximum error `3.73 * 10^-9`.
-- The code batches the 5040 evaluations for efficiency without changing the
-  exact full-group average.
-- The mechanical contract passes. Microsoft Word saved, reopened, and exported
-  the 13-page candidate; pages 1-10 and 13 remained pixel-identical to the
-  prior checkpoint, while revised pages 11-12 passed full-page RTL, header,
-  font, heading, and equation inspection.
-- The user explicitly approved the exact Word candidate on 2026-07-27. After
-  promotion, a fresh read-only Word export matched the approved candidate
-  pixel-for-pixel on all thirteen pages.
-
-## Q3(d) approved technical checkpoint
-
-- The equivariant linear layer uses two independent feature maps and one
-  shared bias:
-  `L(X)_i = X_i A + sum_{j != i} X_j B + b`. Equivalently, with the row
-  mean, it is implemented using the two matrices
-  `W_1 = A - B` and `W_2 = nB`.
-- The approved equivariant network has widths `3 -> 62 -> 3`, with a
-  pointwise ReLU between its two equivariant linear layers. Mean pooling over
-  the seven rows produces the final invariant three-dimensional output.
-- The width 62 gives 809 trainable DeepSets parameters, close to the 803
-  parameters of the approved ordinary `n=7` MLP.
-- Shared configuration: seed 2319, `n=7`, `d=3`, `p=3`, `atol=1e-5`, and
-  `rtol=0`.
-- Recorded maximum absolute errors are `1.19209289551e-7` for one equivariant
-  layer, `1.19209289551e-7` for the full equivariant stack, and
-  `0` after invariant mean pooling. All are below the approved
-  tolerance, and the finite-gradient test passes.
-- The full Q3(a-d) script and all Q3(a-c) regression checks pass.
-
-## Approved Q3(d) document addition
-
-- Q3(d) uses an accepted Heading 2 clone, concise Hebrew prose in the
-  HW1-HW3 style, and five centered Word-native display equations. No answer
-  figure was added.
-- The Q3(c) title was corrected to exactly
-  `סעיף ג. סימטריה דגומה.`; the rejected wording is absent.
-- The new Hebrew prose and headings inherit the accepted native RTL behavior
-  and DejaVu Sans styles. No forbidden direct right-alignment override was
-  introduced.
-- The mechanical contract passes. Microsoft Word saved, closed, reopened,
-  and exported the 13-page candidate successfully.
-- Pages 1-11 remained pixel-identical to the previous checkpoint. The
-  corrected Q3(c) heading on page 12 and the complete Q3(d) answer on page 13
-  passed full-page inspection; page 13 remained pixel-identical after the
-  heading-only correction.
-- The user explicitly approved the corrected Word candidate on 2026-07-27.
-  After promotion, a fresh read-only Word export of `HW4-Solution.docx`
-  matched the approved candidate pixel-for-pixel on all thirteen pages.
-
-## Approved Q3 output-dimension consistency revision
-
-- At the user's request, the Q3(a-c) ordinary MLP and the Q3(d) DeepSets
-  network now share the same input- and output-feature requirement:
-  `n=7`, `d=3`, and `p=d=3`.
-- The ordinary flattened MLP is `21 -> 32 -> 3` with 803 trainable
-  parameters. The comparison DeepSets network is `3 -> 62 -> 3` with 809
-  trainable parameters, a difference of six parameters.
-- All Q3(a-d) calculations and tests were rerun. The revised Q3(c)
-  finite-population estimate keeps `B=2700`, now using coefficient `0.7618`
-  and the bound `B >= 2697.7`.
-- The user explicitly approved the exact revised Word review copy on
-  2026-07-30. Its mechanical audit passed; Microsoft Word saved, reopened,
-  and exported it successfully; and all 13 pages passed visual inspection.
-- After promotion, a fresh read-only Word export of `HW4-Solution.docx`
-  matched the approved candidate pixel-for-pixel on all 13 pages.
-
-## Q3(e) approved technical checkpoint
-
-- Shared configuration: seed 2319, `n=7`, `d=p=3`, and the ordinary
-  order-sensitive flattened MLP `21 -> 32 -> 3` with 803 trainable
+- `n=256`, `d=3`, `p=40`.
+- Architecture: `768 -> 64 -> 64 -> 40`, ReLU activations, 55,976 trainable
   parameters.
-- Each example independently samples a mean vector from `Normal(0, 1)` and a
-  variance vector from `Rayleigh(scale=1)`, then samples seven Gaussian rows.
-  The target is the coordinate-wise empirical variance with divisor `n`.
-- The 1000 examples are split 700/150/150 into training, validation, and test
-  sets. The augmented run applies a freshly sampled uniform row permutation
-  whenever a training example is seen. The control uses the same initial
-  weights, data, and `batch order`, but no row permutations.
-- Both runs use `MSELoss`, Adam with learning rate `1e-4`, `batch size` 64,
-  at most 2000 epochs, early-stopping patience 100, and restoration of the
-  best validation checkpoint.
-- Augmented results: test MSE `0.082402`, mean invariance error `0.392815`,
-  and maximum coordinate difference `1.435731`.
-- Control results: test MSE `0.135498`, mean invariance error `0.645611`, and
-  maximum coordinate difference `1.362356`.
-- Augmentation improves both test MSE and mean invariance error by about 39%,
-  but neither model satisfies the strict worst-case absolute tolerance
-  `atol=1e-2`. This is consistent with data augmentation encouraging, but not
-  architecturally guaranteeing, invariance.
-- Q3(a-d) regression tests, the shared-dimension check, Q3(e) data and fresh
-  permutation checks, and the saved Q3(e) configuration/results checks all
-  pass on 2026-07-31.
+- Rows are sorted lexicographically, then the canonical matrix is flattened
+  and passed to the ordinary MLP.
+- Recorded maximum absolute invariance error: zero; duplicate-row and
+  deterministic-canonicalization checks pass.
 
-## Approved Q3(e) document addition
+### Q3(b): exact symmetrization
 
-- Q3(e) uses an accepted Heading 2 clone, concise Hebrew prose in the HW1-HW3
-  style, DejaVu Sans, and native RTL paragraph behavior.
-- The original English prompt is included as the source excerpt from
-  `HW4.pdf`. The answer includes the approved training/validation-loss graph
-  and an orderly Word-native results table with only `Metric`, `Augmented`,
-  and `Control` columns.
-- The graph SHA-256
-  `49D0B9251E2AF14B075F06CAD5E25C787F4CCEE7FA25A712B53E97013089D209`
-  is recorded as approved media in the mechanical style contract.
-- The user explicitly approved the exact review candidate on 2026-07-31.
-  The mechanical contract passed, Microsoft Word exported all 14 pages, and
-  every promoted page matched the approved render pixel-for-pixel.
+- `n=7`, `d=3`, `p=40`.
+- Base architecture: `21 -> 207 -> 207 -> 40`, ReLU activations, 55,930
+  trainable parameters.
+- The model averages the base MLP over all `7! = 5040` permutations for each
+  input; evaluation is chunked in groups of 1024 without changing the exact
+  average.
+- Recorded base-MLP invariance error: `0.206946`; exact symmetrized error:
+  `1.49e-8`. Enumeration and finite-gradient checks pass.
+
+### Q3(c): sampled symmetrization
+
+- Uses the same `n=7`, `d=3`, `p=40` base MLP as Q3(b).
+- One fixed subset of `B=252` distinct permutations is sampled uniformly
+  without replacement and reused for both compared inputs. This is 5% of
+  `S_7` and a 20-fold reduction from exact symmetrization.
+- The finite-population Monte Carlo prediction for the mean RMS invariance
+  error is `0.005811`.
+- Across 100 comparisons, the empirical mean RMS error is `0.005727`, the
+  95th percentile is `0.008496`, and the supplementary maximum diagnostic is
+  `0.026787`; the approved mean-error criterion passes `atol=1e-2`.
+
+### Q3(d): invariant DeepSets network
+
+- `n=256`, `d=3`, `p=40`.
+- Equivariant block: `3 -> 128 -> 128`, followed by mean pooling and an
+  invariant head `128 -> 128 -> 40`.
+- Total trainable parameters: 55,464.
+- Recorded maximum absolute errors are `2.38e-7` for one equivariant layer,
+  `1.79e-7` for the full equivariant stack, and `1.68e-8` after invariant
+  pooling. Equivariance, invariance, and finite-gradient checks pass.
+
+### Q3(e): augmentation study and permutation coverage
+
+- Dataset: 1,000 examples split 700/150/150 into train/validation/test.
+- Each example independently samples its mean from `Normal(0,1)` and variance
+  from `Rayleigh(scale=1)`, then samples Gaussian rows. The target is the
+  coordinate-wise empirical variance with divisor `n`.
+- Both comparisons use an order-sensitive flattened MLP with 53,571
+  parameters, MSELoss, Adam with learning rate `1e-4`, batch size 64, at most
+  2,000 epochs, early-stopping patience 100, and restoration of the best
+  validation checkpoint.
+- For `n=256`, the architecture is `768 -> 64 -> 64 -> 3`. For the controlled
+  `n=7` experiment, it is `21 -> 349 -> 130 -> 3`.
+- The augmented loader applies a fresh independent random permutation to every
+  example in every batch; it does not share one permutation across the batch.
+- If `N=n!` and a particular example has been shown `k` times, the expected
+  number of distinct permutations seen is
+  `E[D_k] = N(1 - (1 - 1/N)^k)`.
+- At the best augmented checkpoints, `n=7`, `k=1643` gives about 1,402
+  distinct permutations, or 27.8% of `7!`; `n=256`, `k=1042` gives about
+  1,042 distinct permutations, a negligible fraction of `256!`.
+- Recorded `n=256` results:
+  - Initial: test MSE `2.119865`, RMS invariance error `0.187865`.
+  - Augmented: test MSE `0.177690`, RMS invariance error `0.710025`, best
+    epoch 1042.
+  - Control: test MSE `0.581739`, RMS invariance error `0.486882`, best epoch
+    45.
+- Recorded `n=7` results:
+  - Initial: test MSE `1.998376`, RMS invariance error `0.157501`.
+  - Augmented: test MSE `0.006223`, RMS invariance error `0.164389`, best
+    epoch 1643.
+  - Control: test MSE `0.141360`, RMS invariance error `0.505162`, best epoch
+    544.
+- The answer explains that data augmentation improves task generalization but
+  does not impose exact architectural invariance. It also explains why the
+  initial model can have a deceptively small invariance error: a nearly
+  constant random output changes little under permutation while still being a
+  poor predictor.
+
+## Approved Q3 document structure
+
+- Question 3 begins with a common overview covering the RTX 3080, design
+  consistency with Q4, common testing principles, and shared implementation
+  choices.
+- Each subsection answers its own prompt first, then separates the unique
+  implementation/hyperparameters, numerical results, and focused discussion.
+- Hyperparameter tables use one Hebrew-labeled hyperparameter per row; results
+  are in separate tables.
+- Repeated architecture statements and other duplicated prose were removed.
+- The Q3(e) training/validation graph is approved media with SHA-256
+  `5B9ECA79502947795176D6A44B1A430D9F8A181F4B3C3372D0FC7445F16211E4`.
+- The Word table of contents contains the three completed Heading 1 question
+  entries and all 15 Heading 2 subsection entries. Heading 3 implementation,
+  results, and discussion labels are intentionally excluded.
 
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
 - Branch: `main`
 - Project virtual environment: `.venv`, Python 3.12.13.
-- Project dependencies recorded in `requirements.txt`.
+- `requirements.txt` records the CUDA 12.6 PyTorch build.
 - Superseded DOCX checkpoints belong only under `old/`.
 - Candidates, renders, and generated reports belong under ignored `_qa/`.
-- Give the user the review-file path rather than opening Word on the screen;
-  open Word visibly only when the user explicitly requests it.
+- Give the user the review-file path rather than opening Word visibly; open it
+  only when the user explicitly requests that.
 
 ## Precise next action
 
-Continue collaboratively with Question 4: present its original English
-wording from `HW4.pdf`, give only brief orienting context, and ask for the
-student's reasoning one focused question at a time. Challenge mistakes with
-progressively stronger hints and formalize only the answer the student
-understands and approves. Do not implement or write the Q4 answer into the
-DOCX before its design and formal Hebrew answer pass the normal explicit
-approval gates.
+Present Question 4 verbatim from `HW4.pdf`, give only brief orienting context,
+and ask the student for the first part of their reasoning. Continue one focused
+question at a time, challenge mistakes with progressively stronger hints, and
+formalize only the answer the student understands and approves. Do not
+implement Q4 or insert it into the DOCX before the design and formal Hebrew
+answer pass the normal explicit approval gates.

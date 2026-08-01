@@ -266,6 +266,10 @@
     {
       "sha256": "49D0B9251E2AF14B075F06CAD5E25C787F4CCEE7FA25A712B53E97013089D209",
       "label": "Approved Q3(e) training and validation loss graph"
+    },
+    {
+      "sha256": "5B9ECA79502947795176D6A44B1A430D9F8A181F4B3C3372D0FC7445F16211E4",
+      "label": "Approved Q3 aligned training and validation loss graph"
     }
   ]
 }
