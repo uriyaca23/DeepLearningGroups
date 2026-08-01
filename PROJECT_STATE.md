@@ -53,8 +53,8 @@ This remains the immutable recovery baseline through Question 2(e).
   pixel-identical to the approved review render; the Q4 Word direction audit
   reports no Hebrew-direction anomalies; the promoted file is byte-identical
   to the approved candidate.
-- Publication status: approved and promoted locally; Git publication is
-  pending.
+- Publication status: published to `origin/main` in commit `c542d10` on
+  2026-08-01.
 - Previous accepted checkpoint archived as
   `old/HW4-Solution.pre-q4-draft-20260801-162500.docx`, SHA-256
   `7D382D3C8A0069BAF66506CCB45CFE3941AEE19F01C7EC1E64ED1AA2AE2DE39F`.
@@ -70,7 +70,7 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | pending publication |
+| Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
 | Q4 bonuses | not started | not started | not started | not started | not started | not started | not published |
 
 Semantic approval never implies DOCX-format approval.
@@ -311,9 +311,8 @@ All 15 runs completed normally; none reached the 30-minute cap.
 
 ## Precise next action
 
-Publish the approved mandatory Q4 checkpoint to `origin/main`. Then continue
-the collaborative workflow with the first Q4 bonus: present its original
-English wording, give brief orientation only, and ask the student one focused
-question about how surface normals should change the input and the controlled
-comparison. Do not implement or insert the bonus before the normal reasoning,
-formal-answer, and approval gates pass.
+Continue the collaborative workflow with the first Q4 bonus: present its
+original English wording, give brief orientation only, and ask the student one
+focused question about how surface normals should change the input and the
+controlled comparison. Do not implement or insert the bonus before the normal
+reasoning, formal-answer, and approval gates pass.
