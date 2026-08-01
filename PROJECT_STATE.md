@@ -41,23 +41,23 @@ This remains the immutable recovery baseline through Question 2(e).
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`
-- Accepted scope: Question 1 through the mandatory part of Question 4,
-  including the complete Q3/Q4-aligned experiments, Q4 analysis-and-reporting
-  structure, and expanded Heading 1-2 table of contents.
-- User visual approval: granted on 2026-08-01 for the exact 25-page Word
+  `9B9579BF37F8AB238D9E037A49F675C3856259F8DCEC92EA7775A594C06568C1`
+- Accepted scope: Question 1 through the surface-normal Bonus of Question 4,
+  including the complete Q3/Q4-aligned experiments, mandatory Q4
+  analysis-and-reporting structure, merged surface-normal deltas, and expanded
+  Heading 1-2 table of contents.
+- User visual approval: granted on 2026-08-01 for the exact 26-page Word
   review candidate.
 - Verification: the permanent contract audit passed; the read-only Word
-  export has 25 A4 pages; pages 2-18 are pixel-identical to the previous
-  accepted checkpoint; the updated contents page and pages 19-25 are
-  pixel-identical to the approved review render; the Q4 Word direction audit
-  reports no Hebrew-direction anomalies; the promoted file is byte-identical
-  to the approved candidate.
-- Publication status: published to `origin/main` in commit `c542d10` on
-  2026-08-01.
+  export has 26 A4 pages; all 26 promoted pages are pixel-identical to the
+  approved review render; the Q4 Word direction audit reports no
+  Hebrew-direction anomalies; the promoted file is byte-identical to the
+  approved candidate.
+- Publication status: promoted locally after explicit approval on 2026-08-01;
+  repository publication is the current action.
 - Previous accepted checkpoint archived as
-  `old/HW4-Solution.pre-q4-draft-20260801-162500.docx`, SHA-256
-  `7D382D3C8A0069BAF66506CCB45CFE3941AEE19F01C7EC1E64ED1AA2AE2DE39F`.
+  `old/HW4-Solution.pre-q4-normals-20260801-203055.docx`, SHA-256
+  `21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`.
 
 ## Gate record
 
@@ -71,7 +71,7 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
-| Q4 normals bonus | approved design; result interpretation in progress | not started | 15 d=6 runs pass | not started | not started | not started | not published |
+| Q4 normals bonus | approved | approved | 15 d=6 runs pass | approved and promoted | passes | approved | publication pending |
 | Q4 rotation bonus | not started | not started | not started | not started | not started | not started | not published |
 
 Semantic approval never implies DOCX-format approval.
@@ -330,10 +330,37 @@ reproduced the saved test metrics. Raw overall-accuracy results are:
 | Equivariant network | 21.07% | 33.87% | 68.64% | +7.09 / +6.16 / +10.33 pp |
 | Permutation augmentation | 2.31% | 4.38% | 25.69% | +0.20 / -0.73 / +1.01 pp |
 
-The raw experiment is complete, but the student's interpretation, formal Hebrew
-answer, DOCX insertion, and visual approval are still pending. Generated caches,
-checkpoints, plots, and result tables are isolated under ignored
-`_qa/q4_modelnet40_normals/`.
+The student approved the interpretation and formal Hebrew answer on 2026-08-01.
+The answer explains that the equivariant network benefits most because its
+internal pointwise weight sharing learns reusable position-normal geometry over
+all 256 points. Full and sampled symmetrization average the output but retain a
+flattened base MLP without internal pointwise weight sharing; they also use only
+seven points. Their nearly identical results show that the deterioration is not
+caused by the Monte Carlo approximation. In the 5- and 10-example regimes their
+validation cross-entropy remained close to `log(40)`, indicating that they
+barely learned beyond random prediction. The interpretation also records that
+the larger parameter counts of the non-equivariant models did not solve this
+problem and explicitly limits the conclusion because point counts, parameter
+increases, and per-architecture retuning are not controlled.
+
+The exact 26-page review candidate is
+`_qa/q4-normals/HW4-Solution.q4-normals-REVIEW.docx`, SHA-256
+`9B9579BF37F8AB238D9E037A49F675C3856259F8DCEC92EA7775A594C06568C1`.
+Per the student's instruction, it retains the original Q4 accuracy table and
+adds the d=6 overall-accuracy delta in parentheses on a second line inside each
+existing result cell; it does not add a separate bonus-results table or figure.
+The approved explanation appears under the Heading 2 section
+`Bonus. שימוש ב-surface normals.` The permanent OOXML audit, invisible Word TOC
+update and read-only reopen, read-only Word PDF export, Q4 Word direction audit,
+and full-page visual inspection all pass. The TOC contains four Heading 1 and
+23 Heading 2 entries, and pages 18-21 are pixel-identical to the accepted
+render. The student visually approved this exact candidate, after which it was
+promoted byte-for-byte to `HW4-Solution.docx`. A fresh read-only Word export of
+the promoted file is pixel-identical to the approved render on all 26 pages.
+The preceding accepted checkpoint was copied to
+`old/HW4-Solution.pre-q4-normals-20260801-203055.docx` before candidate work.
+Generated caches, checkpoints, plots, and result tables remain isolated under
+ignored `_qa/q4_modelnet40_normals/`.
 
 ## Infrastructure
 
@@ -348,8 +375,8 @@ checkpoints, plots, and result tables are isolated under ignored
 
 ## Precise next action
 
-Continue the collaborative interpretation of the Q4 surface-normal results.
-Ask the student one focused question about why normals strongly improved the
-equivariant network but did not uniformly help the seven-point symmetrization
-models, especially in the 5- and 10-example regimes. Challenge confounding
-claims, then formalize only after the interpretation is correct and approved.
+Publish the approved surface-normal checkpoint, then continue collaboratively
+with the remaining Question 4 rotation-symmetry Bonus. Present the complete
+original English wording and ask one focused conceptual question at a time.
+Do not independently design, implement, run, or formalize the rotation Bonus
+before the student's reasoning and explicit approvals.
