@@ -53,8 +53,8 @@ This remains the immutable recovery baseline through Question 2(e).
   approved review render; the Q4 Word direction audit reports no
   Hebrew-direction anomalies; the promoted file is byte-identical to the
   approved candidate.
-- Publication status: promoted locally after explicit approval on 2026-08-01;
-  repository publication is the current action.
+- Publication status: published to `origin/main` in commit `e04ad10` on
+  2026-08-01.
 - Previous accepted checkpoint archived as
   `old/HW4-Solution.pre-q4-normals-20260801-203055.docx`, SHA-256
   `21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`.
@@ -71,7 +71,7 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
-| Q4 normals bonus | approved | approved | 15 d=6 runs pass | approved and promoted | passes | approved | publication pending |
+| Q4 normals bonus | approved | approved | 15 d=6 runs pass | approved and promoted | passes | approved | published |
 | Q4 rotation bonus | not started | not started | not started | not started | not started | not started | not published |
 
 Semantic approval never implies DOCX-format approval.
@@ -375,8 +375,8 @@ ignored `_qa/q4_modelnet40_normals/`.
 
 ## Precise next action
 
-Publish the approved surface-normal checkpoint, then continue collaboratively
-with the remaining Question 4 rotation-symmetry Bonus. Present the complete
-original English wording and ask one focused conceptual question at a time.
-Do not independently design, implement, run, or formalize the rotation Bonus
-before the student's reasoning and explicit approvals.
+Continue collaboratively with the remaining Question 4 rotation-symmetry
+Bonus. Present the complete original English wording and ask one focused
+conceptual question at a time. Do not independently design, implement, run, or
+formalize the rotation Bonus before the student's reasoning and explicit
+approvals.
