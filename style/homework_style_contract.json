@@ -270,6 +270,14 @@
     {
       "sha256": "5B9ECA79502947795176D6A44B1A430D9F8A181F4B3C3372D0FC7445F16211E4",
       "label": "Approved Q3 aligned training and validation loss graph"
+    },
+    {
+      "sha256": "128A59F69EDA4036AA356E665118D92E7FE18AC24CD4FDB88D5FE4C784318817",
+      "label": "Required Q4 ModelNet40 sanity-check plot"
+    },
+    {
+      "sha256": "9AC3BFDB898053132C145BA6EA01341597DCAE9BCFC998D132E99F0DBBB0B3B9",
+      "label": "Required Q4 ModelNet40 accuracy plot"
     }
   ]
 }

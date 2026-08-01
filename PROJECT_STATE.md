@@ -19,6 +19,8 @@ approved final answers in polished Hebrew.
 - `HW4.pdf`: authoritative assignment wording.
 - `q3_set_networks.py`: approved Question 3(a-e) implementation and recorded
   experiments.
+- `q4_modelnet40.py`: approved Question 4 mandatory benchmark implementation;
+  the mandatory results and their interpretation are approved.
 
 Do not duplicate stable style rules here. Never use, inspect, or modify
 LocationPipeline for this project.
@@ -39,18 +41,23 @@ This remains the immutable recovery baseline through Question 2(e).
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `7D382D3C8A0069BAF66506CCB45CFE3941AEE19F01C7EC1E64ED1AA2AE2DE39F`
-- Accepted scope: Question 1 through Question 3(e), including the complete
-  Q3/Q4-aligned rewrite and expanded Heading 1-2 table of contents.
-- User visual approval: granted on 2026-08-01 for the exact 18-page Word
+  `21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`
+- Accepted scope: Question 1 through the mandatory part of Question 4,
+  including the complete Q3/Q4-aligned experiments, Q4 analysis-and-reporting
+  structure, and expanded Heading 1-2 table of contents.
+- User visual approval: granted on 2026-08-01 for the exact 25-page Word
   review candidate.
-- Verification: the contract audit passed; two independent read-only Word
-  exports were pixel-identical on all 18 pages; every page was visually
-  inspected; the promoted file is byte-identical to the approved candidate.
-- Publication status: published to `origin/main` on 2026-08-01.
+- Verification: the permanent contract audit passed; the read-only Word
+  export has 25 A4 pages; pages 2-18 are pixel-identical to the previous
+  accepted checkpoint; the updated contents page and pages 19-25 are
+  pixel-identical to the approved review render; the Q4 Word direction audit
+  reports no Hebrew-direction anomalies; the promoted file is byte-identical
+  to the approved candidate.
+- Publication status: approved and promoted locally; Git publication is
+  pending.
 - Previous accepted checkpoint archived as
-  `old/HW4-Solution.pre-q3-aligned-20260801-131231.docx`, SHA-256
-  `F7F654E5CA53FFB74C628229BD95DEE2A21D697F0368DCBCA1D77261FB1EF2CB`.
+  `old/HW4-Solution.pre-q4-draft-20260801-162500.docx`, SHA-256
+  `7D382D3C8A0069BAF66506CCB45CFE3941AEE19F01C7EC1E64ED1AA2AE2DE39F`.
 
 ## Gate record
 
@@ -63,7 +70,8 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(c) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(d) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
-| Q4 | in progress | not started | not started | not started | not started | not started | not started |
+| Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | pending publication |
+| Q4 bonuses | not started | not started | not started | not started | not started | not started | not published |
 
 Semantic approval never implies DOCX-format approval.
 
@@ -183,6 +191,113 @@ The following values supersede all earlier Q3 technical configurations.
   entries and all 15 Heading 2 subsection entries. Heading 3 implementation,
   results, and discussion labels are intentionally excluded.
 
+## Q4 mandatory benchmark checkpoint
+
+The student approved the complete mandatory experimental design, numerical
+interpretation, trade-off analysis, recommendation, formal Hebrew text, and
+Word presentation on 2026-08-01. The exact 25-page approved review candidate
+was promoted to `HW4-Solution.docx`, SHA-256
+`21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`.
+
+The promoted checkpoint includes the complete original English Question 4 wording as two
+source images, the mandatory Hebrew answer only, the approved sanity and
+accuracy plots, separate accuracy and runtime tables, four question-level TOC
+entries, and 22 subsection-level TOC entries. Architecture and related technical
+terms are written directly in standard English, including `equivariant network`
+and `linear equivariant layers`. The analysis-and-reporting section now mirrors
+the six required deliverables in six numbered Heading 3 sections: accuracy plot,
+wall-clock runtime, trade-offs, implementation challenges, recommendation, and
+the special suitability of linear equivariant layers. The permanent contract,
+OOXML audit, invisible Word TOC update/reopen, read-only Word PDF
+export, read-only Word direction audit, and full-page inspection of the
+neighboring page and all seven Question 4 pages pass. Formal-content and visual
+approval were granted, and the exact candidate was promoted to the main file.
+
+### Data and protocol
+
+- Source: the assignment-provided ModelNet40 `normal resampled` archive,
+  SHA-256
+  `DCA19B495658331BDD1656527AF7EA6D8CC4162D871E00444A7BFD945C96C9D3`.
+- A compact ignored cache contains the approved 2,000 selected training-pool
+  clouds and all 2,468 official test clouds, each with the first 256 XYZ rows.
+- No centering, rescaling, surface normals, or rotation features are used in
+  the mandatory benchmark.
+- The class-stratified selected pools are nested at 5, 10, and 50 examples per
+  class. Every consecutive block of five contributes four training examples
+  and one validation example, yielding 4/1, 8/2, and 40/10 optimization and
+  validation examples per class.
+- All architectures use the same selected examples, splits, seed 2319, batch
+  order, and matching initial weights where their base MLPs agree.
+- Training uses CrossEntropyLoss and Adam with learning rate `1e-4`,
+  `weight_decay=1e-4`, batch size 64, no dropout, and no scheduler. Early
+  stopping monitors validation cross-entropy with patience 100 and restores
+  the best checkpoint. The maximum is 2,000 epochs and 30 minutes per run.
+- The official test set does not affect training or checkpoint selection.
+  Overall accuracy is primary; mean per-class accuracy is secondary. The
+  augmentation model also receives one fixed-permutation diagnostic pass.
+
+### Architectures and verification
+
+- Canonization: 256 points, lexicographic sorting, then
+  `768 -> 64 -> 64 -> 40`, 55,976 parameters.
+- Full symmetrization: the fixed first seven points and all `7! = 5040`
+  permutations, with averaged logits from `21 -> 207 -> 207 -> 40`, 55,930
+  parameters.
+- Sampled symmetrization: the same seven-point base MLP and one fixed seeded
+  subset of 252 distinct permutations, 55,930 parameters.
+- Equivariant network: 256 points, equivariant `3 -> 128 -> 128`, mean pooling,
+  and head `128 -> 128 -> 40`, 55,464 parameters.
+- Augmentation: 256 points and the ordinary
+  `768 -> 64 -> 64 -> 40` MLP, with a fresh independent row permutation for
+  every training example, 55,976 parameters.
+- The compact dataset, nested splits, matching initializations, parameter
+  counts, logits, finite gradients, fixed sampled subset, and symmetry behavior
+  all pass smoke tests on the RTX 3080. Exact-method errors are at numerical
+  precision; sampled symmetrization is approximate; the ordinary MLP is
+  order-sensitive.
+
+### Approved mandatory results and interpretation
+
+All 15 runs completed normally; none reached the 30-minute cap.
+
+| Architecture | Selected/class | Overall accuracy | Mean class accuracy | Training time (s) |
+|---|---:|---:|---:|---:|
+| Canonization | 5 | 13.98% | 13.58% | 3.94 |
+| Canonization | 10 | 21.27% | 19.12% | 4.95 |
+| Canonization | 50 | 33.27% | 31.25% | 17.32 |
+| Full symmetrization | 5 | 10.98% | 11.61% | 28.47 |
+| Full symmetrization | 10 | 23.42% | 21.83% | 146.84 |
+| Full symmetrization | 50 | 41.98% | 41.84% | 751.42 |
+| Sampled symmetrization | 5 | 10.53% | 11.43% | 5.93 |
+| Sampled symmetrization | 10 | 24.23% | 22.16% | 32.26 |
+| Sampled symmetrization | 50 | 41.98% | 40.79% | 134.91 |
+| Equivariant + mean pooling | 5 | 13.98% | 14.91% | 6.82 |
+| Equivariant + mean pooling | 10 | 27.71% | 26.83% | 13.36 |
+| Equivariant + mean pooling | 50 | 58.31% | 55.82% | 147.82 |
+| Permutation augmentation | 5 | 2.11% | 5.40% | 3.75 |
+| Permutation augmentation | 10 | 5.11% | 7.86% | 5.51 |
+| Permutation augmentation | 50 | 24.68% | 20.77% | 68.17 |
+
+- The augmentation model's fixed-permutation accuracies are 2.35%, 5.63%, and
+  25.32%, close to its original-order accuracies but not an architectural
+  invariance guarantee.
+- Sampled symmetrization is 4.55-5.57 times faster than full symmetrization in
+  measured training wall time, despite using 20 times fewer permutation
+  evaluations; the GPU executes the larger exact batches more efficiently.
+- At 50 selected examples per class, the equivariant model leads by 16.33
+  percentage points over full/sampled symmetrization and by 25.04 points over
+  canonization.
+- Learning curves show genuine overfitting, especially for canonization. At
+  its best 50-example checkpoint, training cross-entropy is 1.4985 while
+  validation cross-entropy is 2.6025.
+- By explicit instruction on 2026-08-01, a later approximately 5,600-parameter
+  sensitivity experiment was discarded in full and must not be used in the
+  homework or future comparisons. Q4 now uses only the approximately
+  56,000-parameter benchmark recorded above.
+- Ignored artifacts under `_qa/q4_modelnet40/` include the required sanity
+  plot, accuracy plot, five learning-curve figures, per-run JSON/checkpoints,
+  consolidated results JSON, and runtime CSV.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -196,9 +311,9 @@ The following values supersede all earlier Q3 technical configurations.
 
 ## Precise next action
 
-Present Question 4 verbatim from `HW4.pdf`, give only brief orienting context,
-and ask the student for the first part of their reasoning. Continue one focused
-question at a time, challenge mistakes with progressively stronger hints, and
-formalize only the answer the student understands and approves. Do not
-implement Q4 or insert it into the DOCX before the design and formal Hebrew
-answer pass the normal explicit approval gates.
+Publish the approved mandatory Q4 checkpoint to `origin/main`. Then continue
+the collaborative workflow with the first Q4 bonus: present its original
+English wording, give brief orientation only, and ask the student one focused
+question about how surface normals should change the input and the controlled
+comparison. Do not implement or insert the bonus before the normal reasoning,
+formal-answer, and approval gates pass.
