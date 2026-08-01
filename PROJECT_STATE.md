@@ -19,8 +19,9 @@ approved final answers in polished Hebrew.
 - `HW4.pdf`: authoritative assignment wording.
 - `q3_set_networks.py`: approved Question 3(a-e) implementation and recorded
   experiments.
-- `q4_modelnet40.py`: approved Question 4 mandatory benchmark implementation;
-  the mandatory results and their interpretation are approved.
+- `q4_modelnet40.py`: approved Question 4 mandatory benchmark and
+  surface-normal implementation, plus the rotation and Transformer Bonus
+  implementations now awaiting final document approval.
 
 Do not duplicate stable style rules here. Never use, inspect, or modify
 LocationPipeline for this project.
@@ -41,23 +42,19 @@ This remains the immutable recovery baseline through Question 2(e).
 
 - File: `HW4-Solution.docx`
 - SHA-256:
-  `9B9579BF37F8AB238D9E037A49F675C3856259F8DCEC92EA7775A594C06568C1`
-- Accepted scope: Question 1 through the surface-normal Bonus of Question 4,
-  including the complete Q3/Q4-aligned experiments, mandatory Q4
-  analysis-and-reporting structure, merged surface-normal deltas, and expanded
-  Heading 1-2 table of contents.
-- User visual approval: granted on 2026-08-01 for the exact 26-page Word
+  `092C293D3F0F96569B1EA02AD205CE1F18C2A504E434C541099FF92FFA5BA646`
+- Accepted scope: the complete HW4 report, including all Q3/Q4 experiments,
+  the three Q4 Bonus method sections, unified 13-variant result tables, and
+  the complete six-part joint analysis.
+- User visual approval: granted on 2026-08-02 for the exact 27-page Word
   review candidate.
-- Verification: the permanent contract audit passed; the read-only Word
-  export has 26 A4 pages; all 26 promoted pages are pixel-identical to the
-  approved review render; the Q4 Word direction audit reports no
-  Hebrew-direction anomalies; the promoted file is byte-identical to the
-  approved candidate.
-- Publication status: published to `origin/main` in commit `e04ad10` on
-  2026-08-01.
-- Previous accepted checkpoint archived as
-  `old/HW4-Solution.pre-q4-normals-20260801-203055.docx`, SHA-256
-  `21753F3AD7BB8D12FBDEEFE1F94F8A711C05E1EB5995FB4B127E0B88D2068F38`.
+- Verification: the permanent contract audit passed; the promoted file is
+  byte-identical to the approved candidate; the fresh read-only Word export
+  has 27 A4 pages and is pixel-identical to the approved render on every page.
+- Publication status: approved and ready for the final commit and push.
+- Previous accepted checkpoint is preserved as
+  `old/HW4-Solution.pre-q4-rotation-20260801-211939.docx`, SHA-256
+  `9B9579BF37F8AB238D9E037A49F675C3856259F8DCEC92EA7775A594C06568C1`.
 
 ## Gate record
 
@@ -72,7 +69,9 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
 | Q4 normals bonus | approved | approved | 15 d=6 runs pass | approved and promoted | passes | approved | published |
-| Q4 rotation bonus | not started | not started | not started | not started | not started | not started | not published |
+| Q4 rotation bonus | autonomous implementation requested | approved | 3 runs and symmetry checks pass | approved and promoted | passes | approved | pending final push |
+| Q4 Transformer bonus | autonomous implementation requested | approved | 5 complete runs plus one OOT run and symmetry checks pass | approved and promoted | passes | approved | pending final push |
+| Q4 final consolidation | requested natural joint structure | approved | 39 saved runs validated | approved and promoted | passes | approved | pending final push |
 
 Semantic approval never implies DOCX-format approval.
 
@@ -159,16 +158,16 @@ The following values supersede all earlier Q3 technical configurations.
   distinct permutations, or 27.8% of `7!`; `n=256`, `k=1042` gives about
   1,042 distinct permutations, a negligible fraction of `256!`.
 - Recorded `n=256` results:
-  - Initial: test MSE `2.119865`, RMS invariance error `0.187865`.
-  - Augmented: test MSE `0.177690`, RMS invariance error `0.710025`, best
+  - Initial: test MSE `2.119865`, mean invariance error `0.187865`.
+  - Augmented: test MSE `0.177690`, mean invariance error `0.710025`, best
     epoch 1042.
-  - Control: test MSE `0.581739`, RMS invariance error `0.486882`, best epoch
+  - Control: test MSE `0.581739`, mean invariance error `0.486882`, best epoch
     45.
 - Recorded `n=7` results:
-  - Initial: test MSE `1.998376`, RMS invariance error `0.157501`.
-  - Augmented: test MSE `0.006223`, RMS invariance error `0.164389`, best
+  - Initial: test MSE `1.998376`, mean invariance error `0.157501`.
+  - Augmented: test MSE `0.006223`, mean invariance error `0.164389`, best
     epoch 1643.
-  - Control: test MSE `0.141360`, RMS invariance error `0.505162`, best epoch
+  - Control: test MSE `0.141360`, mean invariance error `0.505162`, best epoch
     544.
 - The answer explains that data augmentation improves task generalization but
   does not impose exact architectural invariance. It also explains why the
@@ -362,6 +361,160 @@ The preceding accepted checkpoint was copied to
 Generated caches, checkpoints, plots, and result tables remain isolated under
 ignored `_qa/q4_modelnet40_normals/`.
 
+## Q4 rotation-symmetry bonus checkpoint
+
+On 2026-08-01 the student explicitly asked Codex to stop the question-by-question
+interview and complete the remaining rotation Bonus autonomously because the
+submission was urgent. The implemented symmetry group is `O(3)`: `SO(3)` is the
+rotation subgroup, while pairwise distances also remain invariant under
+reflections.
+
+For each XYZ cloud, the implementation subtracts the point mean and divides by
+the maximum centered point norm. It then forms the normalized squared-distance
+matrix
+`D_ij = ||x_hat_i - x_hat_j||_2^2`. For every point `i`, its per-point feature
+is the sorted row `sort(D_i1, ..., D_in)`. Sorting removes the column order, so
+the features are `O(3)`-invariant and permutation-equivariant: a point
+permutation only permutes the feature rows.
+
+The classifier uses all 256 XYZ points. Its DeepSets backbone is
+`256 -> 72 -> 72`, followed by mean pooling and a `72 -> 72 -> 40` head. It has
+55,552 parameters, closely matching the original 55,464-parameter equivariant
+network. The mandatory seed, splits, optimizer, learning rate, weight decay,
+batch size, epoch cap, patience, and time limit are unchanged.
+
+CUDA verification passes:
+
+- Maximum feature error under a combined orthogonal transformation including a
+  reflection, translation, and global scaling: `1.43e-6`.
+- Maximum output-logit error under that transformation: `4.47e-8`.
+- Maximum permutation-equivariance error of the per-point features: `4.77e-7`.
+- Maximum permutation-invariance error of the classifier output: `2.98e-8`.
+- Output shape, finite loss, and finite-gradient checks pass.
+
+All three clean final runs completed and checkpoint-only reevaluation reproduced
+the saved test metrics:
+
+| Selected/class | Overall accuracy | Mean-class accuracy | Training time (s) | Completed/best epoch |
+|---:|---:|---:|---:|---:|
+| 5 | 18.52% | 20.36% | 22.2 | 631 / 531 |
+| 10 | 20.83% | 22.82% | 50.4 | 804 / 704 |
+| 50 | 35.98% | 37.17% | 980.9 | 1230 / 1130 |
+
+Relative to the original equivariant network, overall accuracy changes by
+`+4.54`, `-6.88`, and `-22.33` percentage points. The draft interpretation is
+that exact `O(3)` invariance provides a helpful inductive bias in the smallest
+data regime, but independently sorting every distance row loses correspondence
+between distances in different rows. The aligned ModelNet40 data may also
+contain useful absolute-orientation information that this representation
+removes. Runtime is about 3.3-3.9 times higher because building and sorting the
+`n x n` matrix is at least quadratic in set size, while the original pointwise
+backbone scales linearly in `n`.
+
+The earlier rotation-only Word draft contained stale hard-coded size-50 values
+(`42.02%`, `43.30%`, and `576.1` seconds) that did not match the final saved
+checkpoint. It is superseded and must not be used. The corrected values above
+are read directly from
+`_qa/q4_modelnet40_rotation/runs/rotation_invariant-selected-50.json` and are
+included in the combined final candidate described below.
+
+`HW4-Solution.docx` remains unchanged pending visual approval. The accepted
+pre-rotation checkpoint is archived as
+`old/HW4-Solution.pre-q4-rotation-20260801-211939.docx`. Generated experiment
+artifacts are isolated under ignored `_qa/q4_modelnet40_rotation/`.
+
+## Q4 Transformer Bonus checkpoint
+
+The two required Transformer variants use one shared order-sensitive base
+model: input projection `d -> 56`, fixed sinusoidal positional encoding, two
+`TransformerEncoder` layers with four attention heads and feed-forward width
+104, ReLU, no dropout, final encoder `LayerNorm`, mean pooling, and a
+`56 -> 56 -> 40` head. Each variant has 55,408 trainable parameters, close to
+the common approximately 56,000-parameter budget.
+
+- Canonization + Transformer sorts all 256 XYZ points lexicographically before
+  the Transformer and is exactly invariant.
+- Full symmetrization + Transformer uses the first seven points and averages
+  logits over all `7! = 5040` permutations. Permutations are processed in CUDA
+  chunks of 512; training uses microbatch size 32 and gradient accumulation to
+  preserve effective batch size 64.
+- CUDA smoke tests confirm that the base Transformer is order-sensitive, the
+  canonized model has zero maximum permutation error, and the exact averaged
+  model has maximum error `2.98e-8`. Output-shape, positional-encoding,
+  finite-loss, and finite-gradient checks pass.
+
+Recorded results are:
+
+| Variant | Selected/class | Overall accuracy | Mean-class accuracy | Training time (s) | Status |
+|---|---:|---:|---:|---:|---|
+| Canonization + Transformer | 5 | 21.03% | 21.91% | 24.98 | complete |
+| Canonization + Transformer | 10 | 31.89% | 30.37% | 32.50 | complete |
+| Canonization + Transformer | 50 | 56.08% | 54.72% | 120.52 | complete |
+| Full symmetrization + Transformer | 5 | 17.75% | 16.90% | 760.74 | complete |
+| Full symmetrization + Transformer | 10 | 27.15% | 27.58% | 1495.32 | complete |
+| Full symmetrization + Transformer | 50 | 42.67% | 40.36% | 1800.2 | OOT |
+
+The size-50 exact-symmetrization run reached the 30-minute cap during epoch 94;
+the reported official-test result comes from the best completed checkpoint at
+epoch 93. Generated artifacts are isolated under ignored
+`_qa/q4_transformer_bonus/`.
+
+## Combined Q3/Q4 final review candidate
+
+The full Q3/Q4 requirements were audited against `HW4.pdf`. Question 3 already
+contains every requested construction, test, tolerance/result, before/after
+Q3(e) measurement, and focused discussion. Question 4 is reorganized in the
+natural assignment order: shared protocol; five mandatory architecture
+subsections; separate method subsections for Transformer, surface normals, and
+rotation/pairwise-distance Bonuses; one unified accuracy table; one unified
+runtime table; and a joint six-part analysis matching the requested reporting
+items.
+
+The unified tables contain all 13 variants across the three data sizes, and
+every extension row begins with `Bonus:`. The mandatory five-curve accuracy
+plot is retained for readability; Bonus results are reported in the joint
+tables rather than adding eight overlapping curves. The consolidated result
+ledger validates all 39 saved experiment records under
+`_qa/q4_joint_results/`.
+
+The exact approved 27-page review candidate is
+`_qa/q4-final/HW4-Solution.q4-final-REVIEW.docx`, SHA-256
+`092C293D3F0F96569B1EA02AD205CE1F18C2A504E434C541099FF92FFA5BA646`.
+The permanent OOXML audit passes, Word updated the TOC and reopened the file
+read-only, and the TOC contains four Heading 1 entries and 25 Heading 2 entries.
+The read-only Microsoft Word export contains 27 A4 pages. Every page was
+inspected at full-page resolution: the RTL direction, headings, native Word
+equations, figures, and both unified tables are clean, with no clipping,
+overlap, or stray rotation-only table. The paragraph-level Word audit found no
+Hebrew paragraph with a non-RTL reading order. The user approved this exact
+candidate on 2026-08-02, and it was promoted byte-for-byte to
+`HW4-Solution.docx`. A fresh promoted-file audit and Word render pass; all 27
+promoted pages are pixel-identical to the approved render.
+
+## Final submission package
+
+`HW4.pdf` requires exactly two uploaded files: one PDF report and one ID-named
+ZIP containing all runnable Q3/Q4 code with dependencies stated at the top.
+For the single student listed on the report, the final files are:
+
+- `submission/209517846_hw4.pdf`, SHA-256
+  `1417139D8492E4EE0FAF61EB2691381BE69B6441D9B68EAF3B669128C5385C49`.
+  It is a fresh read-only Microsoft Word export of the promoted DOCX and has 27
+  valid A4 pages.
+- `submission/209517846_hw4.zip`, SHA-256
+  `CA78FB7D70926C403D063A1EB6C4BEAB6BB0E1CDB7D15250011292EE65803465`.
+  Its archive root contains exactly `q3_set_networks.py`,
+  `q4_modelnet40.py`, `q4_joint_results.py`, and `requirements.txt`.
+
+The code was simplified per the student's final instruction: each Python file
+has only a one-line dependency header, and the Q3/Q4 implementation contains
+only two short comments. The extracted archive is byte-identical to the source
+files, compiles successfully, exposes the expected command-line entry points,
+and passes the Q3 symmetry checks and full Q4 CUDA smoke suite from the packed
+copy. No datasets, checkpoints, generated plots, QA files, or outer directory
+are present in the ZIP. The `submission/` directory contains exactly the two
+files required for Moodle.
+
 ## Infrastructure
 
 - Repository: `https://github.com/uriyaca23/DeepLearningGroups.git`
@@ -375,8 +528,6 @@ ignored `_qa/q4_modelnet40_normals/`.
 
 ## Precise next action
 
-Continue collaboratively with the remaining Question 4 rotation-symmetry
-Bonus. Present the complete original English wording and ask one focused
-conceptual question at a time. Do not independently design, implement, run, or
-formalize the rotation Bonus before the student's reasoning and explicit
-approvals.
+Commit and push the approved implementation, promoted report, preserved prior
+checkpoint, and final two-file submission package. Then give the student the
+two exact paths under `submission/` for Moodle upload.

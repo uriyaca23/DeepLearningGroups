@@ -1,13 +1,4 @@
-"""HW4 Question 4 ModelNet40 benchmark.
-
-This module implements the mandatory comparison of five permutation-invariant
-approaches and the approved surface-normal bonus rerun. It deliberately reuses
-the Question 3 model components so the symmetry mechanisms remain aligned.
-
-The large ModelNet40 archive and all generated experiment artifacts live under
-the ignored ``_qa`` directory. Neural-network execution is CUDA-only and never
-silently falls back to the CPU.
-"""
+"""HW4 Question 4. Dependencies: CUDA PyTorch, NumPy, and Matplotlib."""
 
 from __future__ import annotations
 
@@ -51,8 +42,15 @@ CLASS_COUNT = 40
 POSITION_DIM = 3
 MANDATORY_FEATURE_DIM = 3
 NORMAL_FEATURE_DIM = 6
-FEATURE_DIM = MANDATORY_FEATURE_DIM
 SCALABLE_POINT_COUNT = 256
+ROTATION_DISTANCE_FEATURE_DIM = SCALABLE_POINT_COUNT
+ROTATION_HIDDEN_DIM = 72
+TRANSFORMER_MODEL_DIM = 56
+TRANSFORMER_HEAD_COUNT = 4
+TRANSFORMER_FEEDFORWARD_DIM = 104
+TRANSFORMER_LAYER_COUNT = 2
+TRANSFORMER_DROPOUT = 0.0
+FEATURE_DIM = MANDATORY_FEATURE_DIM
 SYMMETRIZATION_POINT_COUNT = 7
 SELECTED_SIZES = (5, 10, 50)
 MAX_SELECTED_PER_CLASS = max(SELECTED_SIZES)
@@ -67,6 +65,7 @@ TIME_LIMIT_SECONDS = 30 * 60
 FULL_PERMUTATION_COUNT = math.factorial(SYMMETRIZATION_POINT_COUNT)
 SAMPLED_PERMUTATION_COUNT = FULL_PERMUTATION_COUNT // 20
 PERMUTATION_CHUNK_SIZE = 1024
+TRANSFORMER_PERMUTATION_CHUNK_SIZE = 512
 
 MODELNET40_URL = (
     "https://www.dropbox.com/scl/fi/qcddtiathbfcp6v3wimoi/"
@@ -77,12 +76,21 @@ EXPECTED_ARCHIVE_SHA256 = (
     "DCA19B495658331BDD1656527AF7EA6D8CC4162D871E00444A7BFD945C96C9D3"
 )
 
-ARCHITECTURES = (
+MANDATORY_ARCHITECTURES = (
     "canonization",
     "full_symmetrization",
     "sampled_symmetrization",
     "equivariant",
     "augmentation",
+)
+TRANSFORMER_BONUS_ARCHITECTURES = (
+    "canonization_transformer",
+    "full_symmetrization_transformer",
+)
+ARCHITECTURES = (
+    *MANDATORY_ARCHITECTURES,
+    "rotation_invariant",
+    *TRANSFORMER_BONUS_ARCHITECTURES,
 )
 ARCHITECTURE_LABELS = {
     "canonization": "Canonization",
@@ -90,6 +98,11 @@ ARCHITECTURE_LABELS = {
     "sampled_symmetrization": "Sampled symmetrization",
     "equivariant": "Equivariant + mean pooling",
     "augmentation": "Permutation augmentation",
+    "rotation_invariant": "Rotation-invariant distance features",
+    "canonization_transformer": "Bonus: Canonization + Transformer",
+    "full_symmetrization_transformer": (
+        "Bonus: Full symmetrization + Transformer"
+    ),
 }
 ARCHITECTURE_POINT_COUNTS = {
     "canonization": SCALABLE_POINT_COUNT,
@@ -97,7 +110,16 @@ ARCHITECTURE_POINT_COUNTS = {
     "sampled_symmetrization": SYMMETRIZATION_POINT_COUNT,
     "equivariant": SCALABLE_POINT_COUNT,
     "augmentation": SCALABLE_POINT_COUNT,
+    "rotation_invariant": SCALABLE_POINT_COUNT,
+    "canonization_transformer": SCALABLE_POINT_COUNT,
+    "full_symmetrization_transformer": SYMMETRIZATION_POINT_COUNT,
 }
+
+ARCHITECTURE_MICROBATCH_SIZES = {
+    architecture: BATCH_SIZE for architecture in ARCHITECTURES
+}
+# Keep exact averaging within GPU memory.
+ARCHITECTURE_MICROBATCH_SIZES["full_symmetrization_transformer"] = 32
 
 
 def _mlp_parameter_count(
@@ -126,12 +148,43 @@ def _expected_parameter_counts(feature_dim: int) -> dict[str, int]:
         + 128
         + _mlp_parameter_count(128, (128,), CLASS_COUNT)
     )
+    rotation_invariant = (
+        2 * ROTATION_DISTANCE_FEATURE_DIM * ROTATION_HIDDEN_DIM
+        + ROTATION_HIDDEN_DIM
+        + 2 * ROTATION_HIDDEN_DIM * ROTATION_HIDDEN_DIM
+        + ROTATION_HIDDEN_DIM
+        + _mlp_parameter_count(
+            ROTATION_HIDDEN_DIM,
+            (ROTATION_HIDDEN_DIM,),
+            CLASS_COUNT,
+        )
+    )
+    transformer = (
+        feature_dim * TRANSFORMER_MODEL_DIM
+        + TRANSFORMER_MODEL_DIM
+        + TRANSFORMER_LAYER_COUNT
+        * (
+            4 * TRANSFORMER_MODEL_DIM * TRANSFORMER_MODEL_DIM
+            + 2 * TRANSFORMER_MODEL_DIM * TRANSFORMER_FEEDFORWARD_DIM
+            + 9 * TRANSFORMER_MODEL_DIM
+            + TRANSFORMER_FEEDFORWARD_DIM
+        )
+        + 2 * TRANSFORMER_MODEL_DIM
+        + _mlp_parameter_count(
+            TRANSFORMER_MODEL_DIM,
+            (TRANSFORMER_MODEL_DIM,),
+            CLASS_COUNT,
+        )
+    )
     return {
         "canonization": flattened,
         "full_symmetrization": symmetrized,
         "sampled_symmetrization": symmetrized,
         "equivariant": equivariant,
         "augmentation": flattened,
+        "rotation_invariant": rotation_invariant,
+        "canonization_transformer": transformer,
+        "full_symmetrization_transformer": transformer,
     }
 
 
@@ -139,8 +192,6 @@ EXPECTED_PARAMETER_COUNTS = _expected_parameter_counts(FEATURE_DIM)
 
 
 def configure_feature_dimension(feature_dim: int) -> None:
-    """Select the approved XYZ-only or XYZ-plus-normal experiment mode."""
-
     if feature_dim not in {MANDATORY_FEATURE_DIM, NORMAL_FEATURE_DIM}:
         raise ValueError(f"Unsupported feature dimension: {feature_dim}")
     global FEATURE_DIM, EXPECTED_PARAMETER_COUNTS
@@ -206,8 +257,6 @@ def _seed_all(seed: int) -> None:
 
 
 def download_modelnet40(archive_path: Path) -> None:
-    """Download the assignment-provided archive with a resumable temp target."""
-
     if archive_path.is_file():
         return
     archive_path.parent.mkdir(parents=True, exist_ok=True)
@@ -291,8 +340,6 @@ def prepare_compact_dataset(
     *,
     force: bool = False,
 ) -> dict[str, Any]:
-    """Cache only the approved training subset and complete official test set."""
-
     if cache_path.is_file() and not force:
         cached = torch.load(cache_path, map_location="cpu", weights_only=False)
         validate_compact_dataset(cached)
@@ -497,8 +544,6 @@ def validate_nested_splits(dataset: dict[str, Any]) -> None:
 
 
 def _lexicographic_sort_by_position(features: Tensor) -> Tensor:
-    """Sort rows by XYZ while carrying every attached feature with its point."""
-
     if (
         features.ndim < 2
         or features.shape[-2] < 1
@@ -525,8 +570,6 @@ def _lexicographic_sort_by_position(features: Tensor) -> Tensor:
 
 
 class PositionCanonizationInvariantMLP(nn.Module):
-    """XYZ canonization that keeps normals attached to their spatial points."""
-
     def __init__(
         self,
         n: int,
@@ -546,6 +589,147 @@ class PositionCanonizationInvariantMLP(nn.Module):
                 f"{tuple(features.shape)}"
             )
         return self.mlp(_lexicographic_sort_by_position(features))
+
+
+def _sinusoidal_positional_encoding(length: int, width: int) -> Tensor:
+    if length < 1 or width < 2 or width % 2:
+        raise ValueError("Sinusoidal encoding requires positive length and even width")
+    positions = torch.arange(length, dtype=torch.float32).unsqueeze(1)
+    frequencies = torch.exp(
+        torch.arange(0, width, 2, dtype=torch.float32)
+        * (-math.log(10_000.0) / width)
+    )
+    encoding = torch.zeros(length, width, dtype=torch.float32)
+    encoding[:, 0::2] = torch.sin(positions * frequencies)
+    encoding[:, 1::2] = torch.cos(positions * frequencies)
+    return encoding
+
+
+class PositionalTransformerClassifier(nn.Module):
+    def __init__(
+        self,
+        n: int,
+        d: int,
+        output_dim: int = CLASS_COUNT,
+        model_dim: int = TRANSFORMER_MODEL_DIM,
+        head_count: int = TRANSFORMER_HEAD_COUNT,
+        feedforward_dim: int = TRANSFORMER_FEEDFORWARD_DIM,
+        layer_count: int = TRANSFORMER_LAYER_COUNT,
+    ) -> None:
+        super().__init__()
+        if n < 1 or d < 1:
+            raise ValueError("n and d must be positive")
+        if model_dim % head_count:
+            raise ValueError("model_dim must be divisible by head_count")
+        self.n = n
+        self.d = d
+        self.output_dim = output_dim
+        self.input_projection = nn.Linear(d, model_dim)
+        self.register_buffer(
+            "positional_encoding",
+            _sinusoidal_positional_encoding(n, model_dim),
+        )
+        layer = nn.TransformerEncoderLayer(
+            d_model=model_dim,
+            nhead=head_count,
+            dim_feedforward=feedforward_dim,
+            dropout=TRANSFORMER_DROPOUT,
+            activation="relu",
+            batch_first=True,
+            norm_first=False,
+        )
+        self.encoder = nn.TransformerEncoder(
+            layer,
+            num_layers=layer_count,
+            norm=nn.LayerNorm(model_dim),
+            enable_nested_tensor=False,
+        )
+        self.head = nn.Sequential(
+            nn.Linear(model_dim, model_dim),
+            nn.ReLU(),
+            nn.Linear(model_dim, output_dim),
+        )
+
+    def forward(self, features: Tensor) -> Tensor:
+        if features.ndim < 2 or tuple(features.shape[-2:]) != (self.n, self.d):
+            raise ValueError(
+                f"Expected shape (..., {self.n}, {self.d}), got "
+                f"{tuple(features.shape)}"
+            )
+        batch_shape = features.shape[:-2]
+        flattened = features.reshape(-1, self.n, self.d)
+        tokens = self.input_projection(flattened)
+        tokens = tokens + self.positional_encoding.to(dtype=tokens.dtype)
+        encoded = self.encoder(tokens)
+        logits = self.head(encoded.mean(dim=-2))
+        return logits.reshape(*batch_shape, self.output_dim)
+
+
+class CanonizationInvariantTransformer(nn.Module):
+    def __init__(
+        self,
+        n: int,
+        d: int,
+        output_dim: int = CLASS_COUNT,
+    ) -> None:
+        super().__init__()
+        self.n = n
+        self.d = d
+        self.base_model = PositionalTransformerClassifier(n, d, output_dim)
+
+    def forward(self, features: Tensor) -> Tensor:
+        return self.base_model(_lexicographic_sort_by_position(features))
+
+
+class RotationInvariantDistanceClassifier(nn.Module):
+    def __init__(
+        self,
+        n: int = SCALABLE_POINT_COUNT,
+        hidden_dim: int = ROTATION_HIDDEN_DIM,
+        output_dim: int = CLASS_COUNT,
+    ) -> None:
+        super().__init__()
+        self.n = n
+        self.classifier = DeepSetsInvariantClassifier(
+            input_dim=n,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+        )
+
+    def per_point_features(self, points: Tensor) -> Tensor:
+        if (
+            points.ndim < 2
+            or points.shape[-2] != self.n
+            or points.shape[-1] < POSITION_DIM
+        ):
+            raise ValueError(
+                f"Expected shape (..., {self.n}, d) with d >= {POSITION_DIM}, "
+                f"got {tuple(points.shape)}"
+            )
+        positions = points[..., :POSITION_DIM]
+        centered = positions - positions.mean(dim=-2, keepdim=True)
+        maximum_radius = torch.linalg.vector_norm(centered, dim=-1).amax(
+            dim=-1, keepdim=True
+        )
+        epsilon = torch.finfo(centered.dtype).eps
+        normalized = centered / maximum_radius.clamp_min(epsilon).unsqueeze(-1)
+        squared_norms = normalized.square().sum(dim=-1, keepdim=True)
+        squared_distances = (
+            squared_norms
+            + squared_norms.transpose(-1, -2)
+            - 2.0 * (normalized @ normalized.transpose(-1, -2))
+        )
+        squared_distances = squared_distances.clamp_min(0.0)
+        diagonal = torch.eye(
+            self.n,
+            dtype=torch.bool,
+            device=points.device,
+        )
+        squared_distances = squared_distances.masked_fill(diagonal, 0.0)
+        return torch.sort(squared_distances, dim=-1, stable=True).values
+
+    def forward(self, points: Tensor) -> Tensor:
+        return self.classifier(self.per_point_features(points))
 
 
 def build_model(architecture: str, *, seed: int = SEED) -> nn.Module:
@@ -596,6 +780,24 @@ def build_model(architecture: str, *, seed: int = SEED) -> nn.Module:
             hidden_dim=128,
             output_dim=CLASS_COUNT,
         )
+    elif architecture == "rotation_invariant":
+        model = RotationInvariantDistanceClassifier()
+    elif architecture == "canonization_transformer":
+        model = CanonizationInvariantTransformer(
+            n=SCALABLE_POINT_COUNT,
+            d=FEATURE_DIM,
+            output_dim=CLASS_COUNT,
+        )
+    elif architecture == "full_symmetrization_transformer":
+        base_transformer = PositionalTransformerClassifier(
+            n=SYMMETRIZATION_POINT_COUNT,
+            d=FEATURE_DIM,
+            output_dim=CLASS_COUNT,
+        )
+        model = SymmetrizedInvariantModel(
+            base_transformer,
+            permutation_chunk_size=TRANSFORMER_PERMUTATION_CHUNK_SIZE,
+        )
     else:
         model = FlattenedMLP(
             SCALABLE_POINT_COUNT,
@@ -616,6 +818,10 @@ def _model_input(points: Tensor, architecture: str) -> Tensor:
     return points[:, : ARCHITECTURE_POINT_COUNTS[architecture], :]
 
 
+def _architecture_microbatch_size(architecture: str) -> int:
+    return ARCHITECTURE_MICROBATCH_SIZES[architecture]
+
+
 def _validation_cross_entropy(
     model: nn.Module,
     points: Tensor,
@@ -624,9 +830,10 @@ def _validation_cross_entropy(
 ) -> float:
     model.eval()
     total_loss = 0.0
+    microbatch_size = _architecture_microbatch_size(architecture)
     with torch.inference_mode():
-        for start in range(0, labels.shape[0], BATCH_SIZE):
-            end = min(start + BATCH_SIZE, labels.shape[0])
+        for start in range(0, labels.shape[0], microbatch_size):
+            end = min(start + microbatch_size, labels.shape[0])
             batch_points = _model_input(
                 points[start:end].to(require_cuda(), non_blocking=True), architecture
             )
@@ -678,6 +885,7 @@ def train_model(
     validation_history: list[float] = []
     status = "complete"
     stop_reason = "maximum_epochs"
+    microbatch_size = _architecture_microbatch_size(architecture)
 
     torch.cuda.synchronize(device)
     started = time.perf_counter()
@@ -693,32 +901,49 @@ def train_model(
             if time.perf_counter() - started >= time_limit_seconds:
                 interrupted = True
                 break
-            indices = order[start : start + BATCH_SIZE]
-            batch_points = _model_input(
-                training_points[indices].to(device, non_blocking=True), architecture
-            )
-            batch_labels = training_labels[indices].to(device, non_blocking=True)
-            if architecture == "augmentation":
-                permutations = draw_row_permutations(
-                    batch_points.shape[0],
-                    SCALABLE_POINT_COUNT,
-                    generator=augmentation_generator,
-                )
-                batch_points = apply_row_permutations(batch_points, permutations)
-
+            effective_indices = order[start : start + BATCH_SIZE]
+            effective_count = effective_indices.shape[0]
             optimizer.zero_grad(set_to_none=True)
-            logits = model(batch_points)
-            loss = nn.functional.cross_entropy(logits, batch_labels)
-            if not torch.isfinite(loss):
-                raise RuntimeError(
-                    f"Non-finite training loss for {architecture}, size "
-                    f"{selected_per_class}, epoch {epoch}"
+            for micro_start in range(0, effective_count, microbatch_size):
+                if time.perf_counter() - started >= time_limit_seconds:
+                    interrupted = True
+                    break
+                indices = effective_indices[
+                    micro_start : micro_start + microbatch_size
+                ]
+                batch_points = _model_input(
+                    training_points[indices].to(device, non_blocking=True),
+                    architecture,
                 )
-            loss.backward()
+                batch_labels = training_labels[indices].to(
+                    device, non_blocking=True
+                )
+                if architecture == "augmentation":
+                    permutations = draw_row_permutations(
+                        batch_points.shape[0],
+                        SCALABLE_POINT_COUNT,
+                        generator=augmentation_generator,
+                    )
+                    batch_points = apply_row_permutations(
+                        batch_points, permutations
+                    )
+
+                logits = model(batch_points)
+                loss_sum = nn.functional.cross_entropy(
+                    logits, batch_labels, reduction="sum"
+                )
+                if not torch.isfinite(loss_sum):
+                    raise RuntimeError(
+                        f"Non-finite training loss for {architecture}, size "
+                        f"{selected_per_class}, epoch {epoch}"
+                    )
+                (loss_sum / effective_count).backward()
+                batch_count = batch_labels.shape[0]
+                epoch_loss += float(loss_sum.item())
+                processed += batch_count
+            if interrupted:
+                break
             optimizer.step()
-            batch_count = batch_labels.shape[0]
-            epoch_loss += float(loss.item()) * batch_count
-            processed += batch_count
 
         if interrupted:
             model.load_state_dict(last_completed_state)
@@ -798,12 +1023,13 @@ def evaluate_test_once(
     permuted_correct = 0
     total_loss = 0.0
     total_correct = 0
+    microbatch_size = _architecture_microbatch_size(architecture)
     model.eval()
     torch.cuda.synchronize(device)
     started = time.perf_counter()
     with torch.inference_mode():
-        for start in range(0, test_labels.shape[0], BATCH_SIZE):
-            end = min(start + BATCH_SIZE, test_labels.shape[0])
+        for start in range(0, test_labels.shape[0], microbatch_size):
+            end = min(start + microbatch_size, test_labels.shape[0])
             batch_points = _model_input(
                 test_points[start:end].to(device, non_blocking=True), architecture
             )
@@ -828,8 +1054,8 @@ def evaluate_test_once(
             SEED + 900_000
         )
         with torch.inference_mode():
-            for start in range(0, test_labels.shape[0], BATCH_SIZE):
-                end = min(start + BATCH_SIZE, test_labels.shape[0])
+            for start in range(0, test_labels.shape[0], microbatch_size):
+                end = min(start + microbatch_size, test_labels.shape[0])
                 batch_points = _model_input(
                     test_points[start:end].to(device, non_blocking=True), architecture
                 )
@@ -927,6 +1153,19 @@ def run_experiment(
         "point_count": ARCHITECTURE_POINT_COUNTS[architecture],
         "feature_dimension": FEATURE_DIM,
         "uses_surface_normals": FEATURE_DIM == NORMAL_FEATURE_DIM,
+        "uses_rotation_invariant_distance_features": (
+            architecture == "rotation_invariant"
+        ),
+        "uses_transformer_base": architecture
+        in {
+            "canonization_transformer",
+            "full_symmetrization_transformer",
+        },
+        "distance_feature_dimension": (
+            ROTATION_DISTANCE_FEATURE_DIM
+            if architecture == "rotation_invariant"
+            else None
+        ),
         "canonization_sort_features": ["x", "y", "z"],
         "class_count": CLASS_COUNT,
         "parameter_count": parameter_count(model),
@@ -935,12 +1174,24 @@ def run_experiment(
         "learning_rate": LEARNING_RATE,
         "weight_decay": WEIGHT_DECAY,
         "batch_size": BATCH_SIZE,
+        "microbatch_size": _architecture_microbatch_size(architecture),
+        "gradient_accumulation_steps": math.ceil(
+            BATCH_SIZE / _architecture_microbatch_size(architecture)
+        ),
         "maximum_epochs": maximum_epochs,
         "early_stopping_patience": patience,
         "time_limit_seconds": time_limit_seconds,
         "loss": "CrossEntropyLoss",
         "learning_rate_scheduler": None,
-        "dropout": None,
+        "dropout": (
+            TRANSFORMER_DROPOUT
+            if architecture
+            in {
+                "canonization_transformer",
+                "full_symmetrization_transformer",
+            }
+            else None
+        ),
         "training": asdict(outcome),
         "test": asdict(metrics),
         "checkpoint": str(checkpoint_path),
@@ -1161,8 +1412,6 @@ def summarize_results(output_dir: Path) -> list[dict[str, Any]]:
 def reevaluate_saved_runs(
     dataset: dict[str, Any], output_dir: Path
 ) -> list[dict[str, Any]]:
-    """Refresh test metrics from saved checkpoints without retraining."""
-
     results = _load_results(output_dir)
     for payload in results:
         architecture = payload["architecture"]
@@ -1252,9 +1501,43 @@ def run_smoke_tests(dataset: dict[str, Any]) -> None:
         raise RuntimeError("Full and sampled symmetrization initial weights differ")
     del canonization, augmentation, full, sampled
 
+    canon_transformer = build_model("canonization_transformer")
+    full_transformer = build_model("full_symmetrization_transformer")
+    canon_parameters = dict(canon_transformer.base_model.named_parameters())
+    full_parameters = dict(full_transformer.base_model.named_parameters())
+    if canon_parameters.keys() != full_parameters.keys() or not all(
+        torch.equal(canon_parameters[name], full_parameters[name])
+        for name in canon_parameters
+    ):
+        raise RuntimeError("Transformer Bonus base-model initial weights differ")
+    positional_encoding = canon_transformer.base_model.positional_encoding
+    if torch.equal(positional_encoding[0], positional_encoding[1]):
+        raise RuntimeError("Transformer positional encoding does not vary by position")
+    base_points = sample_points[:2, :SYMMETRIZATION_POINT_COUNT]
+    base_permutations = draw_row_permutations(
+        base_points.shape[0],
+        SYMMETRIZATION_POINT_COUNT,
+        generator=torch.Generator(device=device).manual_seed(SEED + 776),
+    )
+    with torch.inference_mode():
+        base_original = full_transformer.base_model(base_points)
+        base_permuted = full_transformer.base_model(
+            apply_row_permutations(base_points, base_permutations)
+        )
+    if float((base_original - base_permuted).abs().max().item()) <= 1e-6:
+        raise RuntimeError("Positional Transformer base is unexpectedly invariant")
+    del canon_transformer, full_transformer
+    torch.cuda.empty_cache()
+
     for architecture in ARCHITECTURES:
         model = build_model(architecture)
-        count = 2 if architecture == "full_symmetrization" else 4
+        count = (
+            1
+            if architecture == "full_symmetrization_transformer"
+            else 2
+            if architecture == "full_symmetrization"
+            else 4
+        )
         points = _model_input(sample_points[:count], architecture)
         logits = model(points)
         if logits.shape != (count, CLASS_COUNT):
@@ -1280,7 +1563,14 @@ def run_smoke_tests(dataset: dict[str, Any]) -> None:
             original = model(points)
             permuted = model(apply_row_permutations(points, permutations))
         max_error = float((original - permuted).abs().max().item())
-        if architecture in {"canonization", "full_symmetrization", "equivariant"}:
+        if architecture in {
+            "canonization",
+            "full_symmetrization",
+            "equivariant",
+            "rotation_invariant",
+            "canonization_transformer",
+            "full_symmetrization_transformer",
+        }:
             if max_error > 1e-5:
                 raise RuntimeError(
                     f"{architecture} failed exact invariance smoke test: {max_error}"
@@ -1291,6 +1581,70 @@ def run_smoke_tests(dataset: dict[str, Any]) -> None:
         )
         del model
         torch.cuda.empty_cache()
+
+    rotation_model = build_model("rotation_invariant")
+    rotation_model.eval()
+    rotation_points = _model_input(sample_points, "rotation_invariant")
+    transform_generator = torch.Generator(device=device).manual_seed(SEED + 889)
+    random_matrix = torch.randn(
+        POSITION_DIM,
+        POSITION_DIM,
+        device=device,
+        generator=transform_generator,
+    )
+    orthogonal, _ = torch.linalg.qr(random_matrix)
+    reflection = torch.diag(
+        torch.tensor([-1.0, 1.0, 1.0], device=device)
+    )
+    translations = torch.randn(
+        rotation_points.shape[0],
+        1,
+        POSITION_DIM,
+        device=device,
+        generator=transform_generator,
+    )
+    transformed = 3.7 * (rotation_points @ orthogonal @ reflection) + translations
+    with torch.inference_mode():
+        original_features = rotation_model.per_point_features(rotation_points)
+        transformed_features = rotation_model.per_point_features(transformed)
+        original_logits = rotation_model(rotation_points)
+        transformed_logits = rotation_model(transformed)
+        feature_permutations = draw_row_permutations(
+            rotation_points.shape[0],
+            SCALABLE_POINT_COUNT,
+            generator=torch.Generator(device=device).manual_seed(SEED + 890),
+        )
+        permuted_points = apply_row_permutations(
+            rotation_points, feature_permutations
+        )
+        permuted_features = rotation_model.per_point_features(permuted_points)
+        expected_permuted_features = apply_row_permutations(
+            original_features, feature_permutations
+        )
+    feature_error = float(
+        (original_features - transformed_features).abs().max().item()
+    )
+    logit_error = float((original_logits - transformed_logits).abs().max().item())
+    feature_equivariance_error = float(
+        (permuted_features - expected_permuted_features).abs().max().item()
+    )
+    if (
+        feature_error > 1e-5
+        or logit_error > 1e-5
+        or feature_equivariance_error > 1e-5
+    ):
+        raise RuntimeError(
+            "Rotation-invariant model failed O(3)/translation/scale smoke test: "
+            f"feature_error={feature_error}, logit_error={logit_error}, "
+            f"feature_equivariance_error={feature_equivariance_error}"
+        )
+    print(
+        "Smoke rotation_invariant O(3): "
+        f"feature_error={feature_error:.8g}, logit_error={logit_error:.8g}, "
+        f"feature_equivariance_error={feature_equivariance_error:.8g}"
+    )
+    del rotation_model
+    torch.cuda.empty_cache()
 
     first = draw_row_permutations(
         4,
@@ -1332,7 +1686,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
-        "--architectures", nargs="+", choices=ARCHITECTURES, default=ARCHITECTURES
+        "--architectures",
+        nargs="+",
+        choices=ARCHITECTURES,
+        default=None,
+        help=(
+            "Architectures to run. The default is the five mandatory "
+            "architectures; Bonus architectures must be requested explicitly."
+        ),
     )
     parser.add_argument(
         "--sizes", nargs="+", type=int, choices=SELECTED_SIZES, default=SELECTED_SIZES
@@ -1347,6 +1708,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.architectures is None:
+        args.architectures = MANDATORY_ARCHITECTURES
     configure_feature_dimension(
         NORMAL_FEATURE_DIM if args.use_normals else MANDATORY_FEATURE_DIM
     )

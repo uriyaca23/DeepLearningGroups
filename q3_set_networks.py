@@ -1,12 +1,4 @@
-"""HW4 Question 3 set-network implementations and reproducible experiments.
-
-External dependencies: CUDA-enabled PyTorch and Matplotlib.
-
-The architectures are deliberately aligned with the Question 4 benchmark:
-parts (a)-(d) emit 40 features, while part (e) emits the three coordinate-wise
-variances required by its regression target. All experiment entry points
-require CUDA and never silently fall back to CPU.
-"""
+"""HW4 Question 3. Dependencies: CUDA-enabled PyTorch and Matplotlib."""
 
 from __future__ import annotations
 
@@ -56,8 +48,6 @@ DEFAULT_EARLY_STOPPING_PATIENCE = 100
 
 
 def require_cuda() -> torch.device:
-    """Return cuda:0 or fail instead of silently running an experiment on CPU."""
-
     if not torch.cuda.is_available():
         raise RuntimeError(
             "A CUDA-enabled PyTorch build and an available NVIDIA GPU are "
@@ -97,8 +87,6 @@ def _build_mlp(
 
 
 def lexicographic_sort_rows(x: Tensor) -> Tensor:
-    """Sort the rows of (..., n, d) tensors lexicographically and stably."""
-
     if x.ndim < 2 or x.shape[-2] < 1 or x.shape[-1] < 1:
         raise ValueError(f"Expected shape (..., n, d), got {tuple(x.shape)}")
 
@@ -116,8 +104,6 @@ def lexicographic_sort_rows(x: Tensor) -> Tensor:
 
 
 class FlattenedMLP(nn.Module):
-    """Standard order-sensitive MLP applied to a flattened set matrix."""
-
     def __init__(
         self,
         n: int,
@@ -143,8 +129,6 @@ class FlattenedMLP(nn.Module):
 
 
 class CanonizationInvariantMLP(nn.Module):
-    """Lexicographic canonization followed by the standard flattened MLP."""
-
     def __init__(
         self,
         n: int = DEFAULT_SCALABLE_N,
@@ -168,8 +152,6 @@ def _permutation_outputs(
     *,
     chunk_size: int,
 ) -> Tensor:
-    """Evaluate h(pi.X) for every supplied permutation, in CUDA chunks."""
-
     single = x.ndim == 2
     if single:
         x = x.unsqueeze(0)
@@ -190,8 +172,6 @@ def _permutation_outputs(
 
 
 class SymmetrizedInvariantModel(nn.Module):
-    """Exact invariant model obtained by averaging over every element of S_n."""
-
     def __init__(
         self,
         base_model: FlattenedMLP,
@@ -220,8 +200,6 @@ class SymmetrizedInvariantModel(nn.Module):
 
 
 class SampledSymmetrizedModel(nn.Module):
-    """Approximately invariant model using one fixed 5% permutation subset."""
-
     def __init__(
         self,
         base_model: FlattenedMLP,
@@ -260,8 +238,6 @@ class SampledSymmetrizedModel(nn.Module):
 
 
 class DeepSetsEquivariantLinear(nn.Module):
-    """S_n-equivariant linear layer with local and global-mean terms."""
-
     def __init__(self, input_dim: int, output_dim: int) -> None:
         super().__init__()
         self.input_dim = input_dim
@@ -277,8 +253,6 @@ class DeepSetsEquivariantLinear(nn.Module):
 
 
 class DeepSetsEquivariantBackbone(nn.Module):
-    """Two 128-wide equivariant layers with pointwise ReLU activations."""
-
     def __init__(
         self,
         input_dim: int = DEFAULT_D,
@@ -296,8 +270,6 @@ class DeepSetsEquivariantBackbone(nn.Module):
 
 
 class DeepSetsInvariantClassifier(nn.Module):
-    """Equivariant backbone, mean pooling, and a 128->128->40 head."""
-
     def __init__(
         self,
         input_dim: int = DEFAULT_D,
@@ -432,8 +404,6 @@ def test_q3e_data_and_augmentation(
     d: int = DEFAULT_D,
     seed: int = DEFAULT_SEED,
 ) -> bool:
-    """Check CUDA placement, targets, and fresh valid row permutations."""
-
     expected_inputs = (dataset_size, n, d)
     expected_vectors = (dataset_size, d)
     generator = _cuda_generator(seed + 3000)
@@ -737,9 +707,7 @@ def run_q3e_experiment(
         control_run.model, test_x, test_y, evaluation_permutations
     )
 
-    # Controlled n=7 comparison: use the first seven rows of each reproducible
-    # n=256 example so the latent means, variances, split, and source samples
-    # are matched. The MLP has the same parameter count as the n=256 model.
+    # Match the n=7 and n=256 samples.
     n7_inputs = dataset.inputs[:, :DEFAULT_Q3E_COMPARISON_N, :].contiguous()
     n7_targets = coordinate_variance_target(n7_inputs)
     n7_train_x, n7_train_y = n7_inputs[:train_end], n7_targets[:train_end]
@@ -942,8 +910,6 @@ def q3c_monte_carlo_validation(
     trials: int = DEFAULT_Q3C_TRIALS,
     seed: int = DEFAULT_SEED,
 ) -> Q3CMonteCarloMetrics:
-    """Compare finite-population RMS theory with the measured 5% error."""
-
     device = require_cuda()
     all_indices = torch.tensor(
         list(permutations(range(DEFAULT_SYMMETRIZATION_N))),
