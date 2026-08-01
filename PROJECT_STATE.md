@@ -51,7 +51,8 @@ This remains the immutable recovery baseline through Question 2(e).
 - Verification: the permanent contract audit passed; the promoted file is
   byte-identical to the approved candidate; the fresh read-only Word export
   has 27 A4 pages and is pixel-identical to the approved render on every page.
-- Publication status: approved and ready for the final commit and push.
+- Publication status: published to `origin/main` in commit `7888f24` on
+  2026-08-02.
 - Previous accepted checkpoint is preserved as
   `old/HW4-Solution.pre-q4-rotation-20260801-211939.docx`, SHA-256
   `9B9579BF37F8AB238D9E037A49F675C3856259F8DCEC92EA7775A594C06568C1`.
@@ -69,9 +70,9 @@ This remains the immutable recovery baseline through Question 2(e).
 | Q3(e) | approved | approved | passed | approved and promoted | passes | approved | published |
 | Q4 mandatory | approved | approved | 15 mandatory approximately 56k-parameter runs pass | approved and promoted | passes | approved | published |
 | Q4 normals bonus | approved | approved | 15 d=6 runs pass | approved and promoted | passes | approved | published |
-| Q4 rotation bonus | autonomous implementation requested | approved | 3 runs and symmetry checks pass | approved and promoted | passes | approved | pending final push |
-| Q4 Transformer bonus | autonomous implementation requested | approved | 5 complete runs plus one OOT run and symmetry checks pass | approved and promoted | passes | approved | pending final push |
-| Q4 final consolidation | requested natural joint structure | approved | 39 saved runs validated | approved and promoted | passes | approved | pending final push |
+| Q4 rotation bonus | autonomous implementation requested | approved | 3 runs and symmetry checks pass | approved and promoted | passes | approved | published |
+| Q4 Transformer bonus | autonomous implementation requested | approved | 5 complete runs plus one OOT run and symmetry checks pass | approved and promoted | passes | approved | published |
+| Q4 final consolidation | requested natural joint structure | approved | 39 saved runs validated | approved and promoted | passes | approved | published |
 
 Semantic approval never implies DOCX-format approval.
 
@@ -528,6 +529,5 @@ files required for Moodle.
 
 ## Precise next action
 
-Commit and push the approved implementation, promoted report, preserved prior
-checkpoint, and final two-file submission package. Then give the student the
-two exact paths under `submission/` for Moodle upload.
+Give the student the two exact paths under `submission/` for Moodle upload.
+No additional local changes are required unless the student requests them.
